@@ -1,11 +1,14 @@
 import numpy as np
+#from Projects.Project1 import DataGeneration
 
 
 class Layer:
 
-    def __init__(self, nodes, activation_func='sigmoid'):
+    def __init__(self, nodes, weights, biases, activation_func='sigmoid'):
         self.nodes = nodes
         self.activation_func = activation_func
+        self.weights = weights
+        self.biases = biases
         self.cached_activation = []  # caching activation vector to simplify calculation of derivative when backpropping.
 
     def activation(self, z):
@@ -38,6 +41,8 @@ class Layer:
         else:
             raise NotImplementedError("You have either misspelled the activation function, "
                                       "or this activation function is not implemented")
+    def update_weights_and_biases(self):
+        pass
 
     def _sigmoid(self, z):
         activation = np.array([1 / (1 + np.exp(-z_i)) for z_i in z])
@@ -45,7 +50,6 @@ class Layer:
         return activation
 
     def _d_sigmoid(self, x):
-        '''Inserts the cached activation to the expression of the derivative of the activation function'''
         return np.array([x_i * (1- x_i) for x_i in x])
 
     def _tanh(self, z):
@@ -62,16 +66,13 @@ class Layer:
         return activation
 
     def _d_relu(self, x):
-        derivative  = []
-        for x_i in x:
-            if x_i > 0:
-                derivative.append(1)
-            else:
-                derivative.append(0)
-        return np.array(derivative)
+        derivative = np.copy(x)
+        derivative[derivative <= 0] = 0
+        derivative[derivative > 0] = 1
+        return derivative
 
     def _linear(self, z):
-        activation = np.array([z_i for z_i in z])
+        activation = np.copy(z)
         self.cached_activation = activation
         return activation
 
@@ -79,7 +80,9 @@ class Layer:
         return np.ones_like(x)
 
     def _softmax(self, z):
-        pass
+        sum_z = np.sum([np.exp(z_i for z_i in z)])
+        softmaxed = np.array([np.exp(z_i)/sum_z for z_i in z])
+        return softmaxed
 
 
 def main():
