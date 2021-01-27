@@ -1,14 +1,15 @@
 import numpy as np
-#from Projects.Project1 import DataGeneration
+from Projects.Project1 import DataGeneration
 
 
 class Layer:
 
-    def __init__(self, nodes, weights, biases, activation_func='sigmoid'):
-        self.nodes = nodes
+    def __init__(self, size, activation_func='sigmoid', w_range=(-1.0, 1.0), b_range=(0, 0), lr=0.01):
+        self.size = size
         self.activation_func = activation_func
-        self.weights = weights
-        self.biases = biases
+        self.w_range = w_range
+        self.b_range = b_range
+        self.lr = lr
         self.cached_activation = []  # caching activation vector to simplify calculation of derivative when backpropping.
 
     def activation(self, z):
@@ -40,9 +41,7 @@ class Layer:
             return self._d_linear(self.cached_activation)
         else:
             raise NotImplementedError("You have either misspelled the activation function, "
-                                      "or this activation function is not implemented")
-    def update_weights_and_biases(self):
-        pass
+                                      "or the derivative of this activation function is not implemented")
 
     def _sigmoid(self, z):
         activation = np.array([1 / (1 + np.exp(-z_i)) for z_i in z])
@@ -61,9 +60,11 @@ class Layer:
         return np.array([1 - x_i**2 for x_i in x])
 
     def _relu(self, z):
-        activation = np.array([np.max(0, z_i) for z_i in z])
-        self.cached_activation = activation
-        return activation
+        activation = []
+        for z_i in z:
+            activation.append(max(0, z_i))
+        self.cached_activation = np.array(activation)
+        return np.array(activation)
 
     def _d_relu(self, x):
         derivative = np.copy(x)
@@ -80,14 +81,14 @@ class Layer:
         return np.ones_like(x)
 
     def _softmax(self, z):
-        sum_z = np.sum([np.exp(z_i for z_i in z)])
+        sum_z = np.sum(np.exp([z_i for z_i in z]))
         softmaxed = np.array([np.exp(z_i)/sum_z for z_i in z])
         return softmaxed
 
 
 def main():
-    l1 = Layer(nodes=2, activation_func='sigmoid')
-    z = [1, 1, 1]
+    l1 = Layer(size=2, activation_func='linear')
+    z = np.random.random(3)
     x = l1.activation(z)
     print(x)
     something = l1.derivation()
