@@ -3,13 +3,15 @@ import matplotlib.pyplot as plt
 
 
 class DataGeneration:
-    def __init__(self, noiseParam=0.0, imgSize=10, setSize=100, flatten=False, trainValTest=(0.7, 0.2, 0.1), figCentered=False):
+    def __init__(self, noiseParam=0.0, imgSize=10, setSize=100, flatten=False, trainValTest=(0.7, 0.2, 0.1),
+                 figCentered=False, draw=False):
         self.noiseParam = noiseParam
         self.imgSize = imgSize
         self.setSize = setSize
         self.flatten = flatten
         self.trainValTest = trainValTest
         self.figCentered = figCentered
+        self.draw = draw
         self.trainSet = []
         self.valSet = []
         self.testSet = []
@@ -43,8 +45,9 @@ class DataGeneration:
 
         draw_selection = self.testSet[:20]  # Drawing a selection from the test set
         #TODO: maybe just draw figures when we want it?
-        for image in draw_selection:
-            self.draw_image(image)
+        if self.draw:
+            for image in draw_selection:
+                self.draw_image(image)
 
      #@staticmethod
     def gen_image(self, n, shape, noise, centered):

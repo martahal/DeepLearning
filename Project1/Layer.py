@@ -4,12 +4,14 @@ from Projects.Project1 import DataGeneration
 
 class Layer:
 
-    def __init__(self, size, activation_func='sigmoid', w_range=(-1.0, 1.0), b_range=(0, 0), lr=0.01):
+    def __init__(self, size, activation_func='sigmoid', w_range=(-1.0, 1.0), b_range=(0, 0), lr=0.01,
+                 type='hidden'):
         self.size = size
         self.activation_func = activation_func
         self.w_range = w_range
         self.b_range = b_range
         self.lr = lr
+        self.type = type
         self.cached_activation = []  # caching activation vector to simplify calculation of derivative when backpropping.
 
     def activation(self, z):
