@@ -4,14 +4,14 @@ from Projects.Project1 import DataGeneration
 
 class Layer:
 
-    def __init__(self, size, activation_func='sigmoid', w_range=(-1.0, 1.0), b_range=(0, 0), lr=0.01,
-                 type='hidden'):
+    def __init__(self, size, activation_func, l_type,  w_range=(-1.0, 1.0), b_range=(0, 0), lr=0.01):
         self.size = size
         self.activation_func = activation_func
         self.w_range = w_range
         self.b_range = b_range
         self.lr = lr
-        self.type = type
+        self.l_type = l_type
+        self.weights = None
         self.cached_activation = []  # caching activation vector to simplify calculation of derivative when backpropping.
 
     def activation(self, z):
@@ -45,9 +45,23 @@ class Layer:
             raise NotImplementedError("You have either misspelled the activation function, "
                                       "or the derivative of this activation function is not implemented")
 
+    def gen_weights(self, prev_layer_size):
+        """Initializes the weight matrix that feeds into this layer object\n
+        Takes size of previous layer as argument"""
+        W = np.random.uniform(self.w_range[0], self.w_range[1], (prev_layer_size, self.size))
+        self.weights = W
+
+    def forward_pass(self, layer_input):
+        if self.l_type == 'input' or self.l_type == 'output':
+            x = self.activation(layer_input)
+        else:
+            z = np.dot(layer_input, self.weights)  # + b TODO add bias
+            x = self.activation(z)
+        self.cached_activation = x
+        return x
+
     def _sigmoid(self, z):
         activation = np.array([1 / (1 + np.exp(-z_i)) for z_i in z])
-        self.cached_activation = activation
         return activation
 
     def _d_sigmoid(self, x):
@@ -55,7 +69,6 @@ class Layer:
 
     def _tanh(self, z):
         activation = np.array([np.tanh(z_i) for z_i in z])
-        self.cached_activation = activation
         return activation
 
     def _d_tanh(self, x):
@@ -65,7 +78,6 @@ class Layer:
         activation = []
         for z_i in z:
             activation.append(max(0, z_i))
-        self.cached_activation = np.array(activation)
         return np.array(activation)
 
     def _d_relu(self, x):
@@ -76,7 +88,6 @@ class Layer:
 
     def _linear(self, z):
         activation = np.copy(z)
-        self.cached_activation = activation
         return activation
 
     def _d_linear(self, x):

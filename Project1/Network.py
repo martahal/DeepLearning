@@ -18,16 +18,12 @@ class Network:
 
         '''Generating layers'''
         for spec in self.layer_specs:
-            new_layer = self._gen_layer(spec) # Layer(spec['nodes'], spec['act_func'], )
+            new_layer = self._gen_layer(spec)
             self.layers.append(new_layer)
 
         '''Initializing weights'''
-        for i in range(1, len(self.layers)-1):  # Softmax layer does not take in weights
-            new_weights = self._gen_weights(self.layers[i - 1], self.layers[i])
-            self.weight_array.append(new_weights)
-        #
-        #   if spec['type'] != 'input':  # Note that the input layer MUST have type specified as input
-        #       self._gen_weights()
+        for i in range(1, len(self.layers)-1):  # Input and  Softmax layer does not take in weights--> skipping first and last layers
+            self.layers[i].gen_weights(self.layers[i-1].size)
 
         '''Initializing biases'''
         pass
@@ -35,51 +31,42 @@ class Network:
     def train(self, image_input):
         """Traings the network according to user parameters implemented later"""
         '''Forward pass'''
-        x = self._forward_pass(image_input, 0)
-        for i in range(1, len(self.weight_array) - 1):
-            self._forward_pass(x, i)
-        output = self.layers[-1].activation(x)  # Softmax layer does not take any weights
-        print(output) #TODO remove
+        self._forward_pass(image_input)
 
     def _gen_layer(self, l_dict):
         """Takes a dictionary describing the layer from layer_spec as input.\n
         Parses the dictionary to valid arguments for layer constructor.\n
         Returns a layer object"""
         # TODO Handle variable layer configuration
-        new_layer = Layer(l_dict['size'], l_dict['act_func'])
+        new_layer = Layer(l_dict['size'], l_dict['act_func'], l_dict['type'])
         return new_layer
 
-    def _gen_weights(self, layer_i, layer_j):
-        """Returns a weight matrix of dimensions layer_i.nodes x layer_j.nodes"""
-        # Randomly generated weights within weight range of layer j
-        W = np.random.uniform(layer_j.w_range[0], layer_j.w_range[1], (layer_i.size, layer_j.size))  # np.zeros((layer_i.size, layer_j.size))
-        # TODO handle other weight initialization algorithms
-        return np.array(W)
 
     def _gen_biases(self):
         pass
 
-    def _forward_pass(self, layer_input, layer_index):
-        z = np.dot( layer_input, self.weight_array[layer_index])  # + b TODO add bias
-        return self.layers[layer_index].activation(z)
-
+    def _forward_pass(self, image_input):
+        x = image_input
+        for layer in self.layers:
+            x = layer.forward_pass(x)  # calls the forward pass method in each layer object. Not a recursive call
+            print(x)
 
     def _backward_pass(self):
         pass
 
 
 def main():
-    layer_specs1 = [{'size': 100, 'act_func': 'sigmoid', 'lr': None, 'type': 'input'},
+    layer_specs1 = [{'size': 3, 'act_func': 'linear', 'lr': None, 'type': 'input'},
                     {'size': 2, 'act_func': 'relu', 'lr': None, 'type': 'hidden'},
-                    {'size': 3, 'act_func': 'relu', 'lr': None, 'type': 'hidden'},
-                    {'size': 3, 'act_func': 'softmax', 'lr': None, 'type': 'output'}]
+                    {'size': 4, 'act_func': 'relu', 'lr': None, 'type': 'hidden'},
+                    {'size': 4, 'act_func': 'softmax', 'lr': None, 'type': 'output'}]
 
     new_network = Network(layer_specs1)
     new_network.gen_network()
-    data = DataGeneration(flatten=True)
+    data = DataGeneration(flatten= True)  # TODO make this work for 2d images as well
     data.gen_dataset()
-    #img_input = [1,1,1]
-    new_network.train(data.testSet[-1][-1])
+    img_input = [1,1,1]
+    new_network.train(img_input)  # data.testSet[-1][-1]
 
 if __name__ == '__main__':
     main()
