@@ -18,18 +18,19 @@ class DataGeneration:
 
     def gen_dataset(self):
         """Generates a full dataset and splits it into training, validation and test set according to user specification
-        the proportion of each class in each of the sets is random, but should be more or less equal over time"""
+        the proportion of each class in each of the sets is random, but should be more or less equal over time
+        Each entry in the data set is a dictionary with keys 'class', 'image' and 'flat'image'"""
         full_set = []
         for i in range(self.setSize):
             # the full set is portioned with roughly 1/4 of each image category
             if i > self.setSize * 0.75:
-                full_set.append(self.gen_image(self.imgSize, 'blob', self.noiseParam, self.figCentered))
+                full_set.append(self._gen_image(self.imgSize, 'blob', self.noiseParam, self.figCentered))
             elif i > self.setSize * 0.5:
-                full_set.append(self.gen_image(self.imgSize, 'bars', self.noiseParam, self.figCentered))
+                full_set.append(self._gen_image(self.imgSize, 'bars', self.noiseParam, self.figCentered))
             elif i > self.setSize * 0.25:
-                full_set.append(self.gen_image(self.imgSize, 'rect', self.noiseParam, self.figCentered))
+                full_set.append(self._gen_image(self.imgSize, 'rect', self.noiseParam, self.figCentered))
             else:
-                full_set.append(self.gen_image(self.imgSize, 'cross', self.noiseParam, self.figCentered))
+                full_set.append(self._gen_image(self.imgSize, 'cross', self.noiseParam, self.figCentered))
         np.random.shuffle(full_set)
 
         if (sum(self.trainValTest)- 0.01)**2 < 1 or (sum(self.trainValTest)- 0.01)**2  == 1:
@@ -44,13 +45,11 @@ class DataGeneration:
             print("trainValTest values must sum to exactly 1")
 
         draw_selection = self.testSet[:20]  # Drawing a selection from the test set
-        #TODO: maybe just draw figures when we want it?
         if self.draw:
             for image in draw_selection:
                 self.draw_image(image)
 
-     #@staticmethod
-    def gen_image(self, n, shape, noise, centered):
+    def _gen_image(self, n, shape, noise, centered):
         """Create one image with one of the four desired shapes.
         Positions and sizes of shapes are generated randomly for each image.'
         Noise is implemented by setting a user-defined portion of array entries to the opposite value
@@ -82,7 +81,6 @@ class DataGeneration:
             for i in range(start_pos[0], start_pos[0] + l + 1):
                 image[i][start_pos[1]]= 1  # left side
                 image[i][start_pos[1] + w] = 1 # right side
-            flat_image = image.flatten()
 
         if shape == 'bars':
             # Draw bars at random columns
@@ -119,14 +117,30 @@ class DataGeneration:
                     image[rdm_pixel[0], rdm_pixel[1]] = 0
 
         flat_image = image.flatten()
+        one_hot_class = self._one_hot_encode(shape)
 
-        return shape, image, flat_image
+        return {'class': shape, 'one_hot': one_hot_class, 'image': image, 'flat_image': flat_image}
+
+    def _one_hot_encode(self, label):
+        """Converts class label to a one-hot-encoded vector\n
+        One-hot-vector: ['cross', 'rect', 'bars', 'blob']"""
+        if label == 'cross':
+            return np.array([1, 0, 0, 0])
+        elif label == 'rect':
+            return np.array([0, 1, 0, 0])
+        elif label == 'bars':
+            return np.array([0, 0, 1, 0])
+        elif label == 'blob':
+            return np.array([0, 0, 0, 1])
+
 
     @staticmethod
     def draw_image(data):
         plt.title(data[0])
         plt.imshow(data[1], cmap='gray')
         plt.show()
+
+
 
 
 if __name__ == '__main__':

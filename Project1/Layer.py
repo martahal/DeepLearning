@@ -4,14 +4,15 @@ from Projects.Project1 import DataGeneration
 
 class Layer:
 
-    def __init__(self, size, activation_func, l_type,  w_range=(-1.0, 1.0), b_range=(0, 0), lr=0.01):
+    def __init__(self, size, activation_func, l_type,  w_range=(-1.0, 1.0), lr=0.01):
         self.size = size
         self.activation_func = activation_func
         self.w_range = w_range
-        self.b_range = b_range
         self.lr = lr
         self.l_type = l_type
         self.weights = None
+        self.bias_vector = None
+        self.bias_node = 1
         self.cached_activation = []  # caching activation vector to simplify calculation of derivative when backpropping.
 
     def activation(self, z):
@@ -51,11 +52,16 @@ class Layer:
         W = np.random.uniform(self.w_range[0], self.w_range[1], (prev_layer_size, self.size))
         self.weights = W
 
+    def gen_bias(self):
+        """Initializes a bias vector with all values equal to 0"""
+        self.bias_vector = np.zeros(self.size)
+
     def forward_pass(self, layer_input):
         if self.l_type == 'input' or self.l_type == 'output':
             x = self.activation(layer_input)
         else:
-            z = np.dot(layer_input, self.weights)  # + b TODO add bias
+            z = np.add(np.dot(layer_input, self.weights), np.dot(self.bias_vector, self.bias_node))
+            #z = np.dot(layer_input, self.weights)  # + b TODO add bias
             x = self.activation(z)
         self.cached_activation = x
         return x
