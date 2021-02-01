@@ -12,6 +12,7 @@ class Layer:
         self.l_type = l_type
         self.weights = None
         self.bias_vector = None
+        self.gradient = None
         self.bias_node = 1
         self.cached_activation = []  # caching activation vector to simplify calculation of derivative when backpropping.
 
@@ -49,19 +50,21 @@ class Layer:
     def gen_weights(self, prev_layer_size):
         """Initializes the weight matrix that feeds into this layer object\n
         Takes size of previous layer as argument"""
-        W = np.random.uniform(self.w_range[0], self.w_range[1], (prev_layer_size, self.size))
+        if self.activation_func == 'softmax':  # Softmax layer does not take any weights
+            W = None
+        else:
+            W = np.random.uniform(self.w_range[0], self.w_range[1], (prev_layer_size, self.size))
         self.weights = W
 
     def gen_bias(self):
         """Initializes a bias vector with all values equal to 0"""
         self.bias_vector = np.zeros(self.size)
 
-    def forward_pass(self, layer_input):
-        if self.l_type == 'input' or self.l_type == 'output':
-            x = self.activation(layer_input)
+    def forward_pass(self, image_data):
+        if self.l_type == 'input' or self.activation_func == 'softmax':
+            x = self.activation(image_data)
         else:
-            z = np.add(np.dot(layer_input, self.weights), np.dot(self.bias_vector, self.bias_node))
-            #z = np.dot(layer_input, self.weights)  # + b TODO add bias
+            z = np.add(np.dot(image_data, self.weights), np.dot(self.bias_vector, self.bias_node))
             x = self.activation(z)
         self.cached_activation = x
         return x

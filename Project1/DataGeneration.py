@@ -54,7 +54,7 @@ class DataGeneration:
         Positions and sizes of shapes are generated randomly for each image.'
         Noise is implemented by setting a user-defined portion of array entries to the opposite value
         at the end of the image generation.
-        Returns a tuple: (label, image, flattened image)"""
+        Returns a dictionary: (label, one-hot-label, image, flattened image)"""
         image = np.zeros((n, n))
 
         if shape == 'cross':
