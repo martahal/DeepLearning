@@ -77,77 +77,43 @@ class Network:
     def _backward_pass(self, error, output, minibatch):
         """Takes the output error, and the minibatch of training cases as input,
         updates the weight and bias gradient for each layer"""
-        # Backward pass across softmax
-        targets = np.array([minibatch[i]['one_hot'] for i in range(len(minibatch))])
+        # Creating initial delta for not-softmaxed output layer:
+        if self.layers[-1].l_type != 'softmax':
+            last_layer = self.layers[-1]
+            num_layers = len(self.layers)
+        else:
+            last_layer = self.layers[-2]
+            num_layers = len(self.layers) - 1
+
+        targets = [minibatch[i]['one_hot'] for i in range(len(minibatch))]
+        layer_derivatives = last_layer.derivation()
         loss_derivatives = self._loss_derivative(output, targets)
-        j_soft_matrices = self.layers[-1].derivation()
-        initial_jacobians = []
-        for loss_derivative, j_soft in zip(loss_derivatives, j_soft_matrices):
-            initial_jacobian = np.dot(loss_derivative, j_soft)
-            initial_jacobians.append(initial_jacobian)
-        initial_delta = []
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        '''
-        loss_jacobians = self._loss_derivative(output, targets)
-        output_jacobians = self.layers[-1].derivation()
-        initial_jacobians = []
-        for i in range(len(minibatch)):
-            # Create the initial jacobian for each of the respective training cases in the minibatch
-            initial_jacobian = np.dot(loss_jacobians[i], output_jacobians[i])
-            #each jacobian is a m x 1 vector, where m is the size of the output jacobian matrix (m x m)
-            initial_jacobians.append(initial_jacobian)
-        initial_jacobians = np.array(initial_jacobians)
-        print("initial_jacobians:\n ", initial_jacobians)
-        # Compute initial delta for last layer (not softmax layer)
-        derivatives = self.layers[-2].derivation()
         deltas = []
-        for initial_jacobian, derivative in zip(initial_jacobians, derivatives):
-            # Taking the outer product since derivatives is supposed to be a matrix with only diagonal entries,
-            # but im simplifying it as a vector
-            deltas.append(np.outer(initial_jacobian, derivative))
+        for i in range(len(minibatch)):
+            deltas.append(loss_derivatives[i] * layer_derivatives[i])
         deltas = np.array(deltas)
-        
-        # Use initial delta to calculate weight and bias gradients for the hidden layers
-        for i in range(len(self.layers)-2, 0, -1): # Propagating backwards
-            derivatives = self.layers[i].derivation()
-            prev_layer_activations = self.layers[i - 1].cached_inputs
-            for j in range(len(deltas)):
-                self.layers[i].weight_gradient.append(np.outer(prev_layer_activations[j], deltas[j]))
-                deltas[j] = np.dot(np.dot(self.layers[i-1].weights.transpose(), deltas[j]), derivatives[j])
-                #self.layers[i].weight_gradient.append(np.outer(deltas[j].transpose(), np.dot(prev_layer_activations[j], derivatives[j]))) # weight gradient is now a list of weight gradients with the same size as the weight matrix
-                #self.layers[i].bias_gradient = deltas  # TODO Check correctness
-                #deltas[j] = np.dot(derivatives[j], self.layers[i].weights.transpose()) #* derivatives[j]  #TODO Check correctness
-        '''
+        #weight and bias gradient for output(not softmax) layer
+        prev_layer_activation = self.layers[num_layers - 2].cached_activation
+        weight_gradients = []
+        for i in range(len(minibatch)):
+            # TODO What to do with softmax here?
+            weight_gradients.append(np.einsum('i,j->ij', deltas[i], prev_layer_activation[i])) #TODO Check if correct atleast they're the correct dimension
+        # weight gradient is averaged over all training cases in the minibatch
+        self.layers[num_layers - 1].weight_gradient = np.average(weight_gradients, axis=0)
+
+        for i in range(num_layers - 2, 0, -1):
+            layer_derivatives = self.layers[i].derivation()
+            prev_layer_activation = self.layers[i-1].cached_activation
+            weight_gradients = []
+            new_deltas=[]
+            for j in range(len(minibatch)):
+                new_deltas.append(np.dot(self.layers[i+1].weights, deltas[j]) * layer_derivatives[j]) #Each delta shoud be a 4x1 array
+                weight_gradients.append(np.einsum('i,j->ij', new_deltas[j], prev_layer_activation[j]))    # new weight gradients should be 100X4 matrix (prev layer activation = 100x1)
+            deltas = new_deltas
+            print('hello')
 
 
-        #for layer m =  (n-1 down to layer 1(first hidden layer) )
-            # delta m = np.dot(incoming weights to layer m, previous delta) * layer_m.d_activation
-            # layer_m.bias graidient = delta_m
-            # layer_m.weight gradient = np.dot( delta_m, activations at layer_m-1)
 
-        # Now all layers has (an array of) weight and bias gradients
-        # Each layer can now update incoming weights and biases
-
-        pass
 
     def _calculate_error(self, output, target):
         if self.cost_function == 'cross_entropy':
@@ -185,7 +151,7 @@ class Network:
 
 def main():
     layer_specs1 = [{'size': 100, 'act_func': 'linear', 'lr': None, 'type': 'input'},
-                    {'size': 4, 'act_func': 'sigmoid', 'lr': None, 'type': 'hidden'},
+                    {'size': 6, 'act_func': 'sigmoid', 'lr': None, 'type': 'hidden'},
                     {'size': 4, 'act_func': 'sigmoid', 'lr': None, 'type': 'output'},
                     {'size': 4, 'act_func': 'softmax', 'lr': None, 'type': 'softmax'}]
 

@@ -12,10 +12,10 @@ class Layer:
         self.l_type = l_type
         self.weights = None
         self.bias_vector = None
-        self.weight_gradient = []  # an array that will be filled up with a gradient for each delta. later summed and averaged to update weights
-        self.bias_gradient = []
+        self.weight_gradient = None # an array that will be filled up with a gradient for each delta. later summed and averaged to update weights
+        self.bias_gradient = None
         self.bias_node = 1
-        self.cached_inputs = []  # caching activation vector to simplify calculation of derivative when backpropping.
+        self.cached_activation = []  # caching activation vector to simplify calculation of derivative when backpropping.
 
     def activation(self, z):
         """Computes the activation of the input vector z with the activation function defined for this particular layer.
@@ -37,15 +37,15 @@ class Layer:
     def derivation(self):
         """Inserts the cached activation vector in the derivative function defined for this layer"""
         if self.activation_func == 'sigmoid':
-            return self._d_sigmoid(self.cached_inputs)
+            return self._d_sigmoid(self.cached_activation)
         elif self.activation_func == 'tanh':
-            return self._d_tanh(self.cached_inputs)
+            return self._d_tanh(self.cached_activation)
         elif self.activation_func == 'relu':
-            return self._d_relu(self.cached_inputs)
+            return self._d_relu(self.cached_activation)
         elif self.activation_func == 'linear':
-            return self._d_linear(self.cached_inputs)
+            return self._d_linear(self.cached_activation)
         elif self.activation_func == 'softmax':
-            return self._d_softmax(self.cached_inputs)
+            return self._d_softmax(self.cached_activation)
         else:
             raise NotImplementedError("You have either misspelled the activation function, "
                                       "or the derivative of this activation function is not implemented")
@@ -69,7 +69,7 @@ class Layer:
         else:
             z = np.add(np.dot(image_data, self.weights), np.dot(self.bias_vector, self.bias_node))
             x = self.activation(z)
-        self.cached_inputs = x
+        self.cached_activation = x
         return x
 
     def backward_pass(self, deltas, upstream_activations):  #TODO YOU ARE HERE: problem: self.derivation gives an array of derived activation for all activations from the minibatch
