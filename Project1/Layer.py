@@ -12,9 +12,10 @@ class Layer:
         self.l_type = l_type
         self.weights = None
         self.bias_vector = None
-        self.gradient = None
+        self.weight_gradient = []  # an array that will be filled up with a gradient for each delta. later summed and averaged to update weights
+        self.bias_gradient = []
         self.bias_node = 1
-        self.cached_activation = []  # caching activation vector to simplify calculation of derivative when backpropping.
+        self.cached_inputs = []  # caching activation vector to simplify calculation of derivative when backpropping.
 
     def activation(self, z):
         """Computes the activation of the input vector z with the activation function defined for this particular layer.
@@ -36,13 +37,15 @@ class Layer:
     def derivation(self):
         """Inserts the cached activation vector in the derivative function defined for this layer"""
         if self.activation_func == 'sigmoid':
-            return self._d_sigmoid(self.cached_activation)
+            return self._d_sigmoid(self.cached_inputs)
         elif self.activation_func == 'tanh':
-            return self._d_tanh(self.cached_activation)
+            return self._d_tanh(self.cached_inputs)
         elif self.activation_func == 'relu':
-            return self._d_relu(self.cached_activation)
+            return self._d_relu(self.cached_inputs)
         elif self.activation_func == 'linear':
-            return self._d_linear(self.cached_activation)
+            return self._d_linear(self.cached_inputs)
+        elif self.activation_func == 'softmax':
+            return self._d_softmax(self.cached_inputs)
         else:
             raise NotImplementedError("You have either misspelled the activation function, "
                                       "or the derivative of this activation function is not implemented")
@@ -66,8 +69,30 @@ class Layer:
         else:
             z = np.add(np.dot(image_data, self.weights), np.dot(self.bias_vector, self.bias_node))
             x = self.activation(z)
-        self.cached_activation = x
+        self.cached_inputs = x
         return x
+
+    def backward_pass(self, deltas, upstream_activations):  #TODO YOU ARE HERE: problem: self.derivation gives an array of derived activation for all activations from the minibatch
+        """Lots of nasty tensor calculus happens here"""
+        new_deltas = []
+        weight_gradients = []
+        j_n_sum = self.derivation()
+        dn_dm = np.dot(j_n_sum, self.weights)
+
+        # for i in range(len(deltas)):
+        #     new_deltas.append(np.dot(deltas[i], dn_dm[i]))  #TODO check if this is mathematically correct
+        #
+        # new_deltas = np.array(new_deltas)
+
+        return new_deltas
+
+    def update_weights_and_bias(self):
+        """Sums and averages the array of weight and bias gradients into one weight gradient and one bias gradient
+        updates the weights and biases for this layer"""
+        if self.l_type == 'input' or self.activation_func == 'softmax':
+            pass
+        else:
+            pass #TODO implement weight and bias update
 
     def _sigmoid(self, z):
         activation = np.array([1 / (1 + np.exp(-z_i)) for z_i in z])
@@ -86,7 +111,7 @@ class Layer:
     def _relu(self, z):
         activation = []
         for z_i in z:
-            activation.append(max(0, z_i))
+            activation.append(max(0, z_i)) # TODO Something brakes here
         return np.array(activation)
 
     def _d_relu(self, x):
@@ -106,6 +131,22 @@ class Layer:
         sum_z = np.sum(np.exp([z_i for z_i in z]))
         softmaxed = np.array([np.exp(z_i)/sum_z for z_i in z])
         return softmaxed
+
+    def _d_softmax(self, activations):
+        '''Creates one jacobian matrix (J_SN) for each of the activation vectors in the passed argument'''
+        """The argument is an array of activation vectors of size m
+        Returns an array of m x m jacobian matrices"""
+        j_soft_matrices = []
+        for x in activations:
+            #j_soft = np.array([x * 0] * len(x)) # m x m sized matrix
+            j_soft = np.zeros(shape=(len(x), len(x)))
+            for i in range(len(x)):
+                for j in range(len(x)):
+                    j_soft[i][j] = (x[i] - x[j] ** 2) if i == j else -(x[i] * x[j])
+            j_soft_matrices.append(j_soft)
+        j_soft_matrices = np.array(j_soft_matrices)
+        return j_soft_matrices
+
 
 
 def main():

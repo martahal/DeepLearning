@@ -136,15 +136,15 @@ class DataGeneration:
 
     @staticmethod
     def draw_image(data):
-        plt.title(data[0])
-        plt.imshow(data[1], cmap='gray')
+        plt.title(data['class'])
+        plt.imshow(data['image'], cmap='gray')
         plt.show()
 
 
 
 
 if __name__ == '__main__':
-    data1 = DataGeneration(noiseParam=0.0, imgSize=50, setSize= 100, figCentered=True)
+    data1 = DataGeneration(noiseParam=0.0, imgSize=50, setSize= 100, figCentered=False, draw=True)
     data1.gen_dataset()
     #print(gen_array(10,'cross'))
     #draw_image(gen_array(10,'blob'))
