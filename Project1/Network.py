@@ -50,7 +50,7 @@ class Network:
             '''Updating weights and biases in each layer'''
             for layer in self.layers:
                 layer.update_weights_and_bias()
-
+        print('something')
 
     def _gen_layer(self, l_dict):
         """Takes a dictionary describing the layer from layer_spec as input.\n
@@ -97,7 +97,7 @@ class Network:
         weight_gradients = []
         for i in range(len(minibatch)):
             # TODO What to do with softmax here?
-            weight_gradients.append(np.einsum('i,j->ij', deltas[i], prev_layer_activation[i])) #TODO Check if correct atleast they're the correct dimension
+            weight_gradients.append(np.einsum('i,j->ji', deltas[i], prev_layer_activation[i])) #TODO Check if correct atleast they're the correct dimension
         # weight gradient is averaged over all training cases in the minibatch
         self.layers[num_layers - 1].weight_gradient = np.average(weight_gradients, axis=0)
 
@@ -108,9 +108,11 @@ class Network:
             new_deltas=[]
             for j in range(len(minibatch)):
                 new_deltas.append(np.dot(self.layers[i+1].weights, deltas[j]) * layer_derivatives[j]) #Each delta shoud be a 4x1 array
-                weight_gradients.append(np.einsum('i,j->ij', new_deltas[j], prev_layer_activation[j]))    # new weight gradients should be 100X4 matrix (prev layer activation = 100x1)
+                weight_gradients.append(np.einsum('i,j->ji', new_deltas[j], prev_layer_activation[j]))    # new weight gradients should be 100X4 matrix (prev layer activation = 100x1)
+            self.layers[i].weight_gradient = np.average(weight_gradients, axis=0)
             deltas = new_deltas
             print('hello')
+
 
 
 
@@ -152,8 +154,8 @@ class Network:
 def main():
     layer_specs1 = [{'size': 100, 'act_func': 'linear', 'lr': None, 'type': 'input'},
                     {'size': 6, 'act_func': 'sigmoid', 'lr': None, 'type': 'hidden'},
-                    {'size': 4, 'act_func': 'sigmoid', 'lr': None, 'type': 'output'},
-                    {'size': 4, 'act_func': 'softmax', 'lr': None, 'type': 'softmax'}]
+                    {'size': 4, 'act_func': 'sigmoid', 'lr': None, 'type': 'output'}]
+                    #{'size': 4, 'act_func': 'softmax', 'lr': None, 'type': 'softmax'}]
 
     new_network = Network(layer_specs1, cost_function='cross_entropy')
     new_network.gen_network()

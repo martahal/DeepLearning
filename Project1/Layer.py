@@ -56,7 +56,8 @@ class Layer:
         if self.activation_func == 'softmax':  # Softmax layer does not take any weights
             W = None
         else:
-            W = np.random.uniform(self.w_range[0], self.w_range[1], (prev_layer_size, self.size))
+            W = np.zeros(shape=(prev_layer_size, self.size))
+            #W = np.random.uniform(self.w_range[0], self.w_range[1], (prev_layer_size, self.size))
         self.weights = W
 
     def gen_bias(self):
@@ -89,10 +90,10 @@ class Layer:
     def update_weights_and_bias(self):
         """Sums and averages the array of weight and bias gradients into one weight gradient and one bias gradient
         updates the weights and biases for this layer"""
-        if self.l_type == 'input' or self.activation_func == 'softmax':
+        if self.l_type == 'input' or self.l_type == 'softmax':
             pass
         else:
-            pass #TODO implement weight and bias update
+            self.weights = self.weights - self.lr * self.weight_gradient
 
     def _sigmoid(self, z):
         activation = np.array([1 / (1 + np.exp(-z_i)) for z_i in z])
