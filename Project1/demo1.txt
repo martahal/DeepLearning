@@ -11,11 +11,30 @@ lr: 0.01
 
 [INPUT]
 # input layer size must be of the image size squared
-size: 256
+size: 100
 act_func: linear
 type: input
 
+[HIDDEN 1]
+# Output layer size must be exactly 4
+size: 16
+act_func: sigmoid
+type: hidden
 
+#optional parameters
+w_range: (-0.001, 0.001)
+lr:10
+
+
+[HIDDEN 2]
+# Output layer size must be exactly 4
+size: 4
+act_func: sigmoid
+type: hidden
+
+#optional parameters
+w_range: (-0.001, 0.001)
+lr:10
 
 [OUTPUT]
 # Output layer size must be exactly 4
@@ -24,8 +43,8 @@ act_func: sigmoid
 type: output
 
 #optional parameters
-w_range: (-0.01, 0.01)
-lr: 0.01
+w_range: (-0.001, 0.001)
+lr: 4
 
 
 
@@ -39,9 +58,9 @@ type: softmax
 [DATA]
 #all parameters must be defined
 noise: 0.0
-img_size: 16
-set_size: 500
+img_size: 10
+set_size: 5000
 train_val_test: (0.7, 0.2, 0.1)
-fig_centered: False
+fig_centered: True
 draw: False
 flatten: True

@@ -53,13 +53,12 @@ class Network:
 
         training_loss = []
         validation_loss = []
-        batch_num = 0
+        batch_num = 1
         for i in range(0, len(training_set), batch_size):
             '''Forward pass'''
             train_error, output = self._forward_pass(training_set[i: i + batch_size])
             training_loss.append(np.average(train_error))
-            if self.verbose:
-                print('Batch number: ', batch_num, 'of', float(len(training_set) / batch_size),'\n Errors: ', train_error)
+            print('Batch number: ', batch_num, 'of', round(len(training_set) / batch_size))
             '''Backward pass'''
             self._backward_pass(output, training_set[i:i + batch_size])
             '''Updating weights and biases in each layer'''
@@ -70,6 +69,13 @@ class Network:
             validation_loss.append(np.average(validation_error))
             batch_num += 1
         test_error, test_output = self._forward_pass(test_set)
+        if self.verbose:
+            for i in range(len(test_set)):
+                print('\nInput images: \n', test_set[i]['image'],
+                      '\nImage class: ', test_set[i]['class'],
+                      '\nOutputs: ', test_output[i],
+                      '\nTarget vectors: ', test_set[i]['one_hot'],
+                      '\nError: ', test_error[i] )
         self._plot_learning_progress(training_loss, validation_loss, test_error, batch_num)
 
     def _plot_learning_progress(self, training_loss, validation_loss, test_loss, batch_num):
@@ -78,9 +84,20 @@ class Network:
         plt.plot(x1, training_loss, 'b', label='Training loss')
         x2 = np.linspace(0, batch_num, len(validation_loss))
         plt.plot(x2, validation_loss, 'y', label='Validation loss')
-        #plt.plot(test_loss, 'r', label='Test loss')
-        plt.ylabel('Loss')
+        #x3 = np.linspace(batch_num, batch_num + len(test_loss), len(test_loss))
+
+        #plt.plot(x3, test_loss, 'r', label='Test loss')
         plt.xlabel('Minibatch')
+        if self.loss_function == 'cross_entropy':
+            plt.ylabel('Cross Entropy Loss')
+            plt.ylim(bottom=0,top=2.1)
+            indicator = np.ones_like(training_loss) * 2
+            plt.plot(x1, indicator, 'g--', label='Pure guessing')
+        elif self.loss_function == 'MSE':
+            plt.ylabel('Mean Squared Error Loss')
+            plt.ylim(bottom=0, top=0.2)
+            indicator = np.ones_like(training_loss) * 0.1875
+            plt.plot(x1, indicator, 'g--', label='Pure guessing')
         plt.title('Learning progress')
         plt.legend()
         plt.show()
