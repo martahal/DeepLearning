@@ -3,48 +3,48 @@ import matplotlib.pyplot as plt
 
 
 class DataGeneration:
-    def __init__(self, noiseParam=0.0, imgSize=10, setSize=100, flatten=False, trainValTest=(0.7, 0.2, 0.1),
-                 figCentered=False, draw=False):
-        self.noiseParam = noiseParam
-        self.imgSize = imgSize
-        self.setSize = setSize
+    def __init__(self, noise=0.0, img_size=10, set_size=100, train_val_test=(0.7, 0.2, 0.1),
+                 fig_centered=False, draw=False, flatten=False):
+        self.noise = noise
+        self.img_size = img_size
+        self.set_size = set_size
         self.flatten = flatten
-        self.trainValTest = trainValTest
-        self.figCentered = figCentered
+        self.train_val_test = train_val_test
+        self.fig_centered = fig_centered
         self.draw = draw
-        self.trainSet = []
-        self.valSet = []
-        self.testSet = []
+        self.train_set = []
+        self.val_set = []
+        self.test_set = []
 
     def gen_dataset(self):
         """Generates a full dataset and splits it into training, validation and test set according to user specification
         the proportion of each class in each of the sets is random, but should be more or less equal over time
-        Each entry in the data set is a dictionary with keys 'class', 'image' and 'flat'image'"""
+        Each entry in the data set is a dictionary with keys 'class', 'one_hot' 'image' and 'flat'image'"""
         full_set = []
-        for i in range(self.setSize):
+        for i in range(self.set_size):
             # the full set is portioned with roughly 1/4 of each image category
-            if i > self.setSize * 0.75:
-                full_set.append(self._gen_image(self.imgSize, 'blob', self.noiseParam, self.figCentered))
-            elif i > self.setSize * 0.5:
-                full_set.append(self._gen_image(self.imgSize, 'bars', self.noiseParam, self.figCentered))
-            elif i > self.setSize * 0.25:
-                full_set.append(self._gen_image(self.imgSize, 'rect', self.noiseParam, self.figCentered))
+            if i > self.set_size * 0.75:
+                full_set.append(self._gen_image(self.img_size, 'blob', self.noise, self.fig_centered))
+            elif i > self.set_size * 0.5:
+                full_set.append(self._gen_image(self.img_size, 'bars', self.noise, self.fig_centered))
+            elif i > self.set_size * 0.25:
+                full_set.append(self._gen_image(self.img_size, 'rect', self.noise, self.fig_centered))
             else:
-                full_set.append(self._gen_image(self.imgSize, 'cross', self.noiseParam, self.figCentered))
+                full_set.append(self._gen_image(self.img_size, 'cross', self.noise, self.fig_centered))
         np.random.shuffle(full_set)
 
-        if (sum(self.trainValTest)- 0.01)**2 < 1 or (sum(self.trainValTest)- 0.01)**2  == 1:
+        if (sum(self.train_val_test) - 0.01)**2 < 1 or (sum(self.train_val_test) - 0.01)**2  == 1:
             # Dividing the shuffled full set into training set, validation set and test set
-            train_proportion = round(self.trainValTest[0] * len(full_set))
-            val_proportion = round(self.trainValTest[1] * len(full_set))
-            test_proportion = round(self.trainValTest[2] * len(full_set))
-            self.trainSet = full_set[:train_proportion]
-            self.valSet = full_set[:train_proportion + val_proportion]
-            self.testSet = full_set[:train_proportion + val_proportion + test_proportion]
+            train_proportion = round(self.train_val_test[0] * len(full_set))
+            val_proportion = round(self.train_val_test[1] * len(full_set))
+            test_proportion = round(self.train_val_test[2] * len(full_set))
+            self.train_set = full_set[:train_proportion]
+            self.val_set = full_set[train_proportion:train_proportion + val_proportion]
+            self.test_set = full_set[train_proportion + val_proportion:train_proportion + val_proportion + test_proportion]
         else:
             print("trainValTest values must sum to exactly 1")
 
-        draw_selection = self.testSet[:20]  # Drawing a selection from the test set
+        draw_selection = self.test_set[:20]  # Drawing a selection from the test set
         if self.draw:
             for image in draw_selection:
                 self.draw_image(image)
@@ -136,15 +136,15 @@ class DataGeneration:
 
     @staticmethod
     def draw_image(data):
-        plt.title(data[0])
-        plt.imshow(data[1], cmap='gray')
+        plt.title(data['class'])
+        plt.imshow(data['image'], cmap='gray')
         plt.show()
 
 
 
 
 if __name__ == '__main__':
-    data1 = DataGeneration(noiseParam=0.0, imgSize=50, setSize= 100, figCentered=True)
+    data1 = DataGeneration(noise=0.0, img_size=10, set_size= 100, fig_centered=True, draw=True)
     data1.gen_dataset()
     #print(gen_array(10,'cross'))
     #draw_image(gen_array(10,'blob'))
