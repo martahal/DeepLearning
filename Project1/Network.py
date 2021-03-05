@@ -84,9 +84,9 @@ class Network:
         plt.plot(x1, training_loss, 'b', label='Training loss')
         x2 = np.linspace(0, batch_num, len(validation_loss))
         plt.plot(x2, validation_loss, 'y', label='Validation loss')
-        #x3 = np.linspace(batch_num, batch_num + len(test_loss), len(test_loss))
+        x3 = np.linspace(batch_num, batch_num + len(test_loss), len(test_loss))
 
-        #plt.plot(x3, test_loss, 'r', label='Test loss')
+        plt.plot(x3, test_loss, 'r', label='Test loss')
         plt.xlabel('Minibatch')
         if self.loss_function == 'cross_entropy':
             plt.ylabel('Cross Entropy Loss')

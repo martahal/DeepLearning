@@ -37,10 +37,10 @@ type: softmax
 
 [DATA]
 #all parameters must be defined
-noise: 0.0
+noise: 0
 img_size: 10
 set_size: 500
 train_val_test: (0.7, 0.2, 0.1)
 fig_centered: True
-draw: False
+draw: True
 flatten: True
