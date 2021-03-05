@@ -5,9 +5,10 @@ from Projects.Project1.Network import Network
 
 config = configparser.ConfigParser()
 
-config.read('networkconfig.txt')
-
-
+#config.read('demo1.txt')
+config.read('demo2.txt')
+#config.read('demo3.txt')
+#config.read('demo4.txt')
 
 layerspecs = []
 globals  = {}

@@ -1,0 +1,95 @@
+[GLOBALS]
+loss: cross_entropy
+verbose: True
+batch_size: 4
+
+#Optional parameters
+lr: 0.01
+#w_reg: 0.003
+#reg_option: L2
+
+
+[INPUT]
+# input layer size must be of the image size squared
+size: 100
+act_func: linear
+type: input
+
+[HIDDEN 1]
+# Output layer size must be exactly 4
+size: 10
+act_func: sigmoid
+type: hidden
+
+#optional parameters
+w_range: (-0.001, 0.001)
+lr:10
+
+[HIDDEN 2]
+# Output layer size must be exactly 4
+size: 16
+act_func: sigmoid
+type: hidden
+
+#optional parameters
+w_range: (-0.001, 0.001)
+lr:4
+
+[HIDDEN 3]
+# Output layer size must be exactly 4
+size: 16
+act_func: sigmoid
+type: hidden
+
+#optional parameters
+w_range: (-0.001, 0.001)
+lr:4
+
+[HIDDEN 4]
+# Output layer size must be exactly 4
+size: 16
+act_func: sigmoid
+type: hidden
+
+#optional parameters
+w_range: (-0.001, 0.001)
+lr:4
+
+[HIDDEN 5]
+# Output layer size must be exactly 4
+size: 16
+act_func: sigmoid
+type: hidden
+
+#optional parameters
+w_range: (-0.001, 0.001)
+lr:4
+
+[OUTPUT]
+# Output layer size must be exactly 4
+size: 4
+act_func: sigmoid
+type: output
+
+#optional parameters
+w_range: (-0.001, 0.001)
+lr: 4
+
+
+
+[SOFTMAX]
+# Softmax layer size must be exactly 4
+size: 4
+act_func: softmax
+type: softmax
+
+
+[DATA]
+#all parameters must be defined
+noise: 0.0
+img_size: 10
+set_size: 500
+train_val_test: (0.7, 0.2, 0.1)
+fig_centered: True
+draw: False
+flatten: True
