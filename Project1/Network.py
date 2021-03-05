@@ -15,7 +15,6 @@ class Network:
         self.verbose = verbose
         self.layers = []  # Array of layer objects
 
-
     def gen_network(self):
         """Initializes a network of weights and biases according to specifications from the configuration file
         parsed into the layer_specs argument.\n
@@ -39,7 +38,6 @@ class Network:
         new_layer = Layer(l_dict['size'], l_dict['act_func'], l_dict['type'], l_dict, self.lr)
         return new_layer
 
-
     def train(self, training_set, validation_set, test_set, batch_size):
         """Trains the network with forward and backward propagation\n
         Takes a training set as input
@@ -49,7 +47,6 @@ class Network:
         # Compute the training error for the minibatch (sum the errors of each training case)
         # Compute the gradients of the network using backpropagation
         # Update the weights and biases based on the gradient
-
 
         training_loss = []
         validation_loss = []
@@ -102,11 +99,6 @@ class Network:
         plt.legend()
         plt.show()
 
-
-
-
-
-
     def _forward_pass(self, minibatch):
         """Feeds a batch of training, validation or training cases through the network"""
         image_inputs = np.array([minibatch[i]['flat_image'] for i in range(len(minibatch))]) # ['flat_image']  # tentatively only using flattened images
@@ -151,7 +143,7 @@ class Network:
         prev_layer_activation = self.layers[num_layers - 2].cached_activation
         weight_gradients = []
         for i in range(len(minibatch)):
-            weight_gradients.append(np.einsum('i,j->ji', deltas[i], prev_layer_activation[i])) #TODO Check if correct atleast they're the correct dimension
+            weight_gradients.append(np.einsum('i,j->ji', deltas[i], prev_layer_activation[i]))
         # weight gradient is averaged over all training cases in the minibatch
         self.layers[num_layers - 1].weight_gradient = np.average(weight_gradients, axis=0)
 
@@ -182,13 +174,11 @@ class Network:
     def _cross_entropy(self, output, target):
         error = [-np.sum(target[i] * np.log2(output[i]) + 1e-15) for i in range(len(output))]
         return error
-        # TODO Adjust so that the loss is not proportional to batch size
 
     def _sum_of_squared_errors(self, output, target):
         return[(output - target) ** 2]
 
     def _mean_squared_errors(self, output, target):
-        # TODO fix this to return an array of errors
         errors = np.zeros(shape=output.shape)
         for i in range(len(output)):
             errors[i] = (1/len(output[0]) * (output[i] - target[i])**2)
