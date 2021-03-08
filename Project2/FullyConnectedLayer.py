@@ -69,7 +69,8 @@ class FullyConnectedLayer:
         if self.l_type == 'input' or self.activation_func == 'softmax':
             x = self.activation(inputs)
         else:
-            z = np.add(np.einsum('ij,jk->ik', inputs, self.weights), np.dot(self.bias_vector, self.bias_node))
+            #z = np.add(np.einsum('ij,jk->ik', inputs, self.weights), np.dot(self.bias_vector, self.bias_node))
+            z = np.einsum('ij,jk->ik', inputs, self.weights)
             x = self.activation(z)
         self.cached_activation = x
         return x
