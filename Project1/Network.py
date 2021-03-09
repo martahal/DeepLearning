@@ -201,7 +201,7 @@ class Network:
 
 
 def main():
-    image_size = 10
+    image_size = 5
     layer_specs1 = [{'size': image_size**2, 'act_func': 'linear', 'type': 'input'},
                     #{'size': 4, 'act_func': 'relu', 'type': 'hidden'},
                     #{'size': 32, 'act_func': 'relu', 'type': 'hidden'},
@@ -212,12 +212,20 @@ def main():
     global_parameters = {'loss': 'cross_entropy', 'verbose': False, 'lr': 0.03, 'w_reg': 0.003, 'reg_option': 'L2'}
     new_network = Network(layer_specs1, global_parameters['loss'], global_parameters['verbose'], global_parameters)
     new_network.gen_network()
-    data = DataGeneration(noise=0.0, img_size=image_size, set_size=1000,
-                          flatten=True, fig_centered=True,
-                          train_val_test=(0.9, 0.05, 0.05), draw=False)
-    data.gen_dataset()
-    dummy_dataset = [{'class': 'bars', 'image': [1,1,1], 'flat_image': [1,1,1]}]
-    new_network.train(data.train_set, data.val_set, data.test_set, batch_size=20)
+    #data = DataGeneration(noise=0.0, img_size=image_size, set_size=1000,
+     #                     flatten=True, fig_centered=True,
+     #                     train_val_test=(0.9, 0.05, 0.05), draw=False)
+    #data.gen_dataset()
+    raw_image = np.zeros((5, 5))
+    raw_image[0] = np.array([1, 1, 1, 1, 1])
+    test_image = np.array([raw_image])
+    flat_image = test_image.flatten()
+    print(test_image)
+    dummy_dataset = [{'class': 'bars', 'one_hot': [0, 1, 0, 0], 'image': test_image, 'flat_image': flat_image},
+                     {'class': 'cross', 'one_hot': [1, 0, 0, 0], 'image': test_image, 'flat_image': flat_image}]
+
+    #new_network.train(data.train_set, data.val_set, data.test_set, batch_size=20)
+    new_network.train(dummy_dataset, dummy_dataset, dummy_dataset, batch_size=1)
 
 if __name__ == '__main__':
     main()

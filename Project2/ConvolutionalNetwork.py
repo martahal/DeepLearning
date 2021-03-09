@@ -43,7 +43,31 @@ class ConvolutionalNetwork:
                                            self.lr)
         return new_fc_layer
 
-    def train(self):
+    def train(self, training_set, batch_size):
+        """
+        Forward passes a batch of training cases and calculate the networks prediction and loss
+        Backward passes the loss gradient through the network
+        Calculates validation and test error, as well as plotting the learning progress
+
+        :param training_set: The whole dataset to train the network.
+                            A list of dictionaries with keys 'class', 'one_hot' 'image' and 'flat'image'
+                            shape:(len(training_set), 1)
+        :param batch_size: Number of training cases to feed the network simultaneously
+        """
+        training_loss = []
+        validation_loss = []
+        batch_num = 1
+        for i in range(0, len(training_set), batch_size):
+            '''Forward pass'''
+            predictions, train_errors = self._forward_pass(training_set[i: i + batch_size])
+            training_loss.append(np.average(train_errors))
+            print('Batch number: ', batch_num, 'of', round(len(training_set) / batch_size))
+            '''Backward pass'''
+            self._backward_pass(predictions, training_set[i:i + batch_size])
+            '''Updating weights and biases in each layer'''
+            for fc_layer in self.fully_connected_layers:
+                fc_layer.update_weights_and_bias()
+            batch_num += 1
         pass
 
     def _forward_pass(self, minibatch):
@@ -56,12 +80,15 @@ class ConvolutionalNetwork:
         losses = []
         for i in range(len(minibatch)):
             '''Forward pass through convolutional layers'''
-            x = minibatch[i]['image'] # TODO extend so that it forwards a minibatch of images
+            x = minibatch[i]['image'] 
             for conv_layer in self.convolutoinal_layers:
                 x = conv_layer.forward_pass(x)
             '''flattening output to fully connected layers'''
             (n_filters, output_width, output_height) = x.shape
             flattened_output = x.reshape((1, n_filters * output_width * output_height))
+            # Overwriting the cached activation for the last convolutional layer,
+            # so that it can be used when backpropping through the first fully connected layer
+            self.convolutoinal_layers[-1].cached_activation = flattened_output
             #TODO x.reshape((BATCH_SIZE, n_filters * output_width * output_height))
             y = flattened_output
             '''Forward pass through fully connected layers'''
@@ -77,7 +104,100 @@ class ConvolutionalNetwork:
             losses.append(loss)
         return np.array(predictions), np.array(losses)
 
-    def _backward_pass(self):
+    def _backward_pass(self, output, minibatch):
+        """
+        Calculates the gradients for each fully connected and convolutional layer
+
+
+        :param output: The predicted output of the network after forward pass.
+                        shape:(batch_size, 4)
+        :param minibatch: The minibatch of training cases. A list of dictionaries
+                        shape: (batch_size, 1)
+        """
+
+        '''Backward pass for fully connected layers'''
+        targets = [minibatch[i]['one_hot'] for i in range(len(minibatch))]
+
+        if self.fully_connected_layers[-1].l_type == 'softmax':
+            # Creating the initial jacobian to be used for the initial delta calculations when output is softmaxed
+            last_layer = self.fully_connected_layers[-2]
+            num_layers = len(self.fully_connected_layers) - 1
+            initial_jacobian = []
+            for i in range(len(minibatch)):
+                # Initial Jacobian = d_loss_funciton * J_soft
+                temp_loss_deriv = self._loss_derivative(output, targets)[i]
+                temp_Jsoft = self.fully_connected_layers[-1].derivation()[i]
+                initial_jacobian.append(np.dot(temp_loss_deriv, temp_Jsoft))
+        else:
+            # Creating initial delta for non-softmaxed output layer:
+            last_layer = self.fully_connected_layers[-1]
+            num_layers = len(self.fully_connected_layers)
+            initial_jacobian = self._loss_derivative(output, targets)
+
+        layer_derivatives = last_layer.derivation()
+
+        deltas = []
+        for i in range(len(minibatch)):
+            deltas.append(initial_jacobian[i] * layer_derivatives[i])
+        deltas = np.array(deltas)
+        # weight and bias gradient for output(not softmax) layer
+        prev_layer_activation = self.fully_connected_layers[num_layers - 2].cached_activation
+        weight_gradients = []
+        for i in range(len(minibatch)):
+            weight_gradients.append(np.einsum('i,j->ji', deltas[i], prev_layer_activation[i]))
+        # weight gradient is averaged over all training cases in the minibatch
+        self.fully_connected_layers[num_layers - 1].weight_gradient = np.average(weight_gradients, axis=0)
+
+        for i in range(num_layers - 2, 0, -1):  # TODO: would this break if there is only one fc_layer before softmax? probably yes
+            # In this case the first fc_layer is not an input layer.
+            # However, the weight gradient for the first fc_layer doesn't work here since prev_layer is convlayer
+            layer_derivatives = self.fully_connected_layers[i].derivation()
+            prev_layer_activation = self.fully_connected_layers[i - 1].cached_activation
+            weight_gradients = []
+            new_deltas = []
+            for j in range(len(minibatch)):
+                new_deltas.append(np.dot(self.fully_connected_layers[i + 1].weights, deltas[j]) * layer_derivatives[j])
+                weight_gradients.append(np.einsum('i,j->ji', new_deltas[j], prev_layer_activation[j]))
+            self.fully_connected_layers[i].weight_gradient = np.average(weight_gradients, axis=0)
+            deltas = new_deltas
+
+        '''Backward pass for convolutional layers'''
+        # First we need to backward pass the first fc_layer with the activation from the last convolutional layer
+        layer_derivatives = self.fully_connected_layers[0].derivation()
+        prev_layer_activation = self.convolutoinal_layers[-1].cached_activation
+        weight_gradients = []
+        last_fc_deltas = []
+        output_jacobians = []
+        for j in range(len(minibatch)):
+            last_fc_deltas.append(np.dot(self.fully_connected_layers[1].weights, deltas[j]) * layer_derivatives[j])
+            weight_gradients.append(np.einsum('i,j->ji', last_fc_deltas[j], prev_layer_activation[j]))
+            output_jacobians.append(np.einsum('k,klij ->lij', last_fc_deltas[j], self.convolutoinal_layers[-1].kernels))
+        self.fully_connected_layers[0].weight_gradient = np.average(weight_gradients, axis=0)
+
+        # Backward convolution is handled in the conv layer
+
+        delta_jacobians = np.array(output_jacobians)
+        # Delta jacobian has shape: (batch_size, number of filters, kernel_height, kernel_width)
+        # Only passing one delta jacobian at a time to the backward pass function in the conv layer
+
+
+        # TODO Before any further backprop, make sure to obtain the correct jacobian and delta to pass back
+
+        # Backward pass for conv layers
+        for i in range(len(self.convolutoinal_layers)-1, 0, -1):
+            upstream_feature_map = self.convolutoinal_layers[i-1].cached_activation # TODO This would also have the batch size as first dimension
+            updated_jacobians = []
+            # Only passing one delta jacobian at a time to the backward pass function in the conv layer
+            for delta_jacobian in delta_jacobians:
+                updated_delta_jacobian, kernel_gradient = self.convolutoinal_layers[i].\
+                    backward_pass(
+                        delta_jacobian,
+                        upstream_feature_map
+                    )
+                updated_jacobians.append(updated_delta_jacobian)
+            delta_jacobians = np.array(updated_jacobians)
+
+
         pass
 
     def _calculate_error_and_accuracy(self, output, target):
@@ -125,10 +245,14 @@ class ConvolutionalNetwork:
 def main():
     image_size = 10
     num_filters = 4
-    specs = [{'input_channels': 1, 'output_channels': num_filters,'kernel_size': (2,2),
+    specs = [
+        {'input_channels': 1, 'output_channels': num_filters,'kernel_size': (2,2),
             'stride': 1, 'mode': 'same', 'act_func': 'relu', 'lr': 0.01, 'type': 'conv2d'},
-            {'input_size': 64, 'output_size': 4, 'act_func': 'sigmoid', 'type': 'output'},
-            {'input_size': 4, 'output_size': 4, 'act_func': 'softmax', 'type': 'softmax'}]
+        {'input_channels': num_filters, 'output_channels': num_filters,'kernel_size': (2,2),
+            'stride': 1, 'mode': 'same', 'act_func': 'relu', 'lr': 0.01, 'type': 'conv2d'},
+        {'input_size': 36, 'output_size': 4, 'act_func': 'sigmoid', 'type': 'hidden'},
+        {'input_size': 4, 'output_size': 4, 'act_func': 'sigmoid', 'type': 'output'},
+        {'input_size': 4, 'output_size': 4, 'act_func': 'softmax', 'type': 'softmax'}]
     #specs = [{'input_size': image_size**2, 'output_size': 4, 'act_func': 'linear', 'type': 'input'},
     #         {'input_channels': 1, 'output_channels': 4,'kernel_size': (2,2),
     #          'stride': 1, 'mode': 'same', 'act_func': 'relu', 'lr': 0.01, 'type': 'conv2d'},
@@ -144,8 +268,11 @@ def main():
     test_image = np.array([raw_image])
     print(test_image)
     dummy_dataset = [{'class': 'bars','one_hot': [0,1,0,0], 'image': test_image, 'flat_image': [1,1,1]},
-                     {'class': 'cross','one_hot': [1,0,0,0], 'image': test_image, 'flat_image': [1,1,1]}]
-    feature_map = convnet._forward_pass(dummy_dataset)
+                     {'class': 'cross','one_hot': [1,0,0,0], 'image': test_image, 'flat_image': [1,1,1]},
+                     {'class': 'bars', 'one_hot': [0, 1, 0, 0], 'image': test_image, 'flat_image': [1, 1, 1]},
+                     {'class': 'cross', 'one_hot': [1, 0, 0, 0], 'image': test_image, 'flat_image': [1, 1, 1]}
+                     ]
+    feature_map = convnet.train(dummy_dataset, 1)
     print(feature_map)
 
 if __name__ == '__main__':
