@@ -29,12 +29,43 @@ class ConvLayer2D:
         # TODO: implement kernel generation
 
     def activation(self, feature_map):
+        if self.activation_function == 'sigmoid':
+            return self._sigmoid(feature_map)
+        elif self.activation_function == 'tanh':
+            return self._tanh(feature_map)
+        elif self.activation_function == 'relu':
+            return self._relu(feature_map)
+        elif self.activation_function == 'elu':
+            return self._elu(feature_map)
+        elif self.activation_function == 'selu':
+            return self._selu(feature_map)
+        elif self.activation_function == 'linear':
+            return self._linear(feature_map)
+        else:
+            raise NotImplementedError("You have either misspelled the activation function, "
+                                      "or this activation function is not implemented")
         # TODO: implement activation after convolution
         pass
 
     def derivation(self):
-        # TODO: implement derivation for backprop
-        pass
+        """Inserts the cached activation vector in the derivative function defined for this layer"""
+        if self.activation_function == 'sigmoid':
+            return self._d_sigmoid(self.cached_activation)
+        elif self.activation_function == 'tanh':
+            return self._d_tanh(self.cached_activation)
+        elif self.activation_function == 'relu':
+            return self._d_relu(self.cached_activation)
+        elif self.activation_function == 'elu':
+            return self._d_elu(self.cached_activation)
+        elif self.activation_function == 'selu':
+            return self._d_selu(self.cached_activation)
+        elif self.activation_function == 'linear':
+            return self._d_linear(self.cached_activation)
+
+        else:
+            raise NotImplementedError("You have either misspelled the activation function, "
+                                      "or the derivative of this activation function is not implemented")
+
 
     def forward_pass(self, input):
         """
@@ -71,7 +102,7 @@ class ConvLayer2D:
                     out_x_idx += 1
                 y_idx += self.stride
                 out_y_idx += 1
-        # TODO feature_map = activation(feature_map)
+        feature_map = self.activation(feature_map)
         self.cached_activation.append(feature_map) # Appending actual activation
         # Mad hack, not very pretty
         return feature_map
@@ -103,7 +134,7 @@ class ConvLayer2D:
                     out_x_idx += 1
                 y_idx += self.stride
                 out_y_idx += 1
-#
+
         return new_jacobian, kernel_gradient # TODO New jacobian must be derived
 
     def update_filters(self):
@@ -112,6 +143,64 @@ class ConvLayer2D:
     def visualize_kernels(self):
         # TODO: implement visualization of kernels
         pass
+
+    def _sigmoid(self, feature_map):
+        activation = np.vectorize(lambda fm: 1 / (1 + np.exp(-fm)))(feature_map)
+        return activation
+
+    def _d_sigmoid(self, activation):
+        d_activation = np.vectorize(lambda a: a * (1 - a))(activation)
+        return d_activation
+
+    def _tanh(self, feature_map):
+        activation = np.vectorize(np.tanh)(feature_map)
+        return activation
+
+    def _d_tanh(self, activation):
+        d_activation = np.vectorize(lambda a: 1 - a**2)(activation)
+
+    def _relu(self, feature_map):
+        activation = np.copy(feature_map)
+        activation[activation < 0] = 0
+        return activation
+
+    def _d_relu(self, activation):
+        d_activation = np.copy(activation)
+        d_activation[d_activation <= 0] = 0
+        d_activation[d_activation > 0] = 1
+        return d_activation
+
+    def _elu(self, feature_map):
+        alpha = 1.0
+        activation = np.vectorize(lambda fm: alpha*(np.exp(fm) - 1) if fm <= 0 else fm)(feature_map)
+        return activation
+
+    def _d_elu(self, activation):
+        alpha = 1.0
+        d_activation = np.vectorize(lambda a: alpha * (np.exp(a)) if a < 0 else 1)(activation)
+        return d_activation
+
+    def _selu(self, feature_map):
+        alpha = 1.6732632423543772848170429916717
+        lmb = 1.0507009873554804934193349852946
+        activation = np.vectorize(lambda fm: lmb * (alpha * np.exp(fm) - alpha) if fm <= 0 else lmb * fm)(feature_map)
+        return activation
+
+    def _d_selu(self,activation):
+        alpha = 1.6732632423543772848170429916717
+        lmb = 1.0507009873554804934193349852946
+        d_activation = np.vectorize(lambda a: lmb * (alpha * np.exp(a)) if a <=0 else lmb)(activation)
+        return d_activation
+
+
+    def _linear(self, feature_map):
+        return feature_map
+
+    def _d_linear(self,activation):
+        return np.ones_like(activation)
+
+
+
 
 def main():
     raw_image = np.zeros((7, 7))

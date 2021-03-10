@@ -103,7 +103,7 @@ class ConvolutionalNetwork:
                       '\nTarget vectors: ', test_set[i]['one_hot'],
                       '\nError: ', test_error[i] )
 
-        print('Test loss: ', test_error)
+        print('Test loss: ', np.average(test_error))
 
     def _forward_pass(self, minibatch):
         """
@@ -236,6 +236,7 @@ class ConvolutionalNetwork:
                         delta_jacobians[j],
                         upstream_feature_map[j]
                     )
+                #Purely testing something
                 updated_jacobians.append(updated_delta_jacobian)
                 filter_gradients.append(filter_gradient)
             delta_jacobians = np.array(updated_jacobians)
@@ -303,9 +304,9 @@ def main():
 
     specs = [
         {'spatial_dimensions':(image_size, image_size), 'input_channels': 1, 'output_channels': num_filters,'kernel_size': (3,3),
-            'stride': 1, 'mode': 'same', 'act_func': 'relu', 'lr': 0.01, 'type': 'conv2d'},
+            'stride': 1, 'mode': 'same', 'act_func': 'elu', 'lr': 0.01, 'type': 'conv2d'},
         {'spatial_dimensions':(8,8),'input_channels': num_filters, 'output_channels': num_filters*2,'kernel_size': (3,3),
-            'stride': 1, 'mode': 'same', 'act_func': 'relu', 'lr': 0.01, 'type': 'conv2d'},
+            'stride': 1, 'mode': 'same', 'act_func': 'elu', 'lr': 0.01, 'type': 'conv2d'},
         {'input_size': 6 * 6 *num_filters*2, 'output_size': 8, 'act_func': 'sigmoid', 'type': 'fully_connected'},
         {'input_size': 8, 'output_size': 4, 'act_func': 'sigmoid', 'type': 'output'},
         # NOTE Cannot remove intermediate dense layer yet
