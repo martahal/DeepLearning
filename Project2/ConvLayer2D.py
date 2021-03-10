@@ -81,24 +81,24 @@ class ConvLayer2D:
         new_jacobian = np.zeros(upstream_feature_map.shape)
         kernel_gradient = np.zeros(self.kernels.shape)
          #TODO this breaks somehow
-        #for current_filter_idx in range(n_filters):
-        #    y_idx = out_y_idx = 0
-        #    while y_idx + filter_height <= fm_height:
-        #        x_idx = out_x_idx = 0
-        #        while x_idx + filter_width <= fm_width:
-        #            kernel_gradient[current_filter_idx] += \
-        #                delta_jacobian[current_filter_idx, out_y_idx, out_x_idx] * \
-        #                upstream_feature_map[:, y_idx: y_idx + filter_height, x_idx: x_idx+ filter_width]
+        for current_filter_idx in range(n_filters):
+            y_idx = out_y_idx = 0
+            while y_idx + filter_height <= fm_height:
+                x_idx = out_x_idx = 0
+                while x_idx + filter_width <= fm_width: #TODO Comment on what im doing here
+                    kernel_gradient[current_filter_idx] += \
+                        delta_jacobian[current_filter_idx, out_y_idx, out_x_idx] * \
+                        upstream_feature_map[:, y_idx: y_idx + filter_height, x_idx: x_idx+ filter_width]
 ##
-        #            new_jacobian[:, y_idx:y_idx + filter_height, x_idx: x_idx + filter_width] += \
-        #                delta_jacobian[current_filter_idx, out_y_idx, out_x_idx] * \
-        #                self.kernels[current_filter_idx]
-        #            x_idx += self.stride
-        #            out_x_idx += 1
-        #        y_idx += self.stride
-        #        out_y_idx += 1
+                    new_jacobian[:, y_idx:y_idx + filter_height, x_idx: x_idx + filter_width] += \
+                        delta_jacobian[current_filter_idx, out_y_idx, out_x_idx] * \
+                        self.kernels[current_filter_idx]
+                    x_idx += self.stride
+                    out_x_idx += 1
+                y_idx += self.stride
+                out_y_idx += 1
 #
-        #return new_jacobian, kernel_gradient
+        return new_jacobian, kernel_gradient # TODO New jacobian must be derived
 
 
     def visualize_kernels(self):
