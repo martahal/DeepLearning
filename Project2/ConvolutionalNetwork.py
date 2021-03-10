@@ -1,6 +1,7 @@
 import numpy as np
 from Projects.Project2.ConvLayer2D import ConvLayer2D
 from Projects.Project2.DenseLayer import DenseLayer
+from Projects.Project2.FullyConnectedLayer import FullyConnectedLayer
 
 class ConvolutionalNetwork:
 
@@ -19,6 +20,10 @@ class ConvolutionalNetwork:
                 new_conv_layer = self._gen_conv_layer(spec)
                 new_conv_layer.gen_kernels()  # Input and output channels is known by the object upon construction
                 self.convolutional_layers.append(new_conv_layer)
+            elif spec['type']== 'fully_connected':
+                new_fc_layer = self._gen_fc_layer(spec)
+                new_fc_layer.gen_weights(self.convolutional_layers[-1].cached_activation)
+                self.fully_connected_layer =new_fc_layer
             else:
                 new_dense_layer = self._gen_dense_layer(spec)
                 new_dense_layer.gen_weights(spec['input_size'])
@@ -27,7 +32,8 @@ class ConvolutionalNetwork:
 
     def _gen_conv_layer(self, spec):
         # TODO make construction of layer simpler
-        new_conv_layer = ConvLayer2D(spec['input_channels'],
+        new_conv_layer = ConvLayer2D(spec['spatial_dimensions'],
+                                     spec['input_channels'],
                                      spec['output_channels'],
                                      spec['kernel_size'],
                                      spec['stride'],
@@ -37,11 +43,18 @@ class ConvolutionalNetwork:
         return new_conv_layer
 
     def _gen_dense_layer(self, spec):
-        new_fc_layer = DenseLayer(spec['output_size'],
+        new_dense_layer = DenseLayer(spec['output_size'],
                                   spec['act_func'],
                                   spec['type'],
                                   spec,
                                   self.lr)
+        return new_dense_layer
+    def _gen_fc_layer(self, spec):
+        new_fc_layer = FullyConnectedLayer(spec['output_size'],
+                                           spec['act_func'],
+                                           spec['type'],
+                                           spec,
+                                           self.lr)
         return new_fc_layer
 
     def train(self, training_set, batch_size):
@@ -79,32 +92,29 @@ class ConvolutionalNetwork:
         """
         predictions = []
         losses = []
+        activations = []
         for i in range(len(minibatch)):
             '''Forward pass through convolutional layers'''
             x = minibatch[i]['image'] 
             for conv_layer in self.convolutional_layers:
                 x = conv_layer.forward_pass(x)
-            # TODO Handle this for fully connected layer and change wording for dense layer
-            '''flattening output to fully connected layers'''
-            (n_filters, output_width, output_height) = x.shape
-            flattened_output = x.reshape((1, n_filters * output_width * output_height))
-            # Overwriting the cached activation for the last convolutional layer,
-            # so that it can be used when backpropping through the first fully connected layer
-            self.convolutional_layers[-1].cached_activation = flattened_output
-            #TODO x.reshape((BATCH_SIZE, n_filters * output_width * output_height))
-            y = flattened_output
-            '''Forward pass through dense layers'''
-            for dense_layer in self.dense_layers:
-                y = dense_layer.forward_pass(y)
-                print(f"Layer: {dense_layer.l_type}, output: {y}")
 
-            '''Calculating loss (and accuracy)'''
-            targets = minibatch[i]['one_hot']
-            loss = self._calculate_error_and_accuracy(y, targets)
+            '''Forward pass through fully connected layer'''
+            x = self.fully_connected_layer.forward_pass(x)
+            activations.append(x)
+        '''Forward pass through dense layers'''
+        activations = np.array(activations)
+        # Doing this for the whole batch since that was the way it was done in the prev. project
+        for dense_layer in self.dense_layers:
+            activations = dense_layer.forward_pass(activations)
+            #print(f"Layer: {dense_layer.l_type}, output: {activations}")
 
-            predictions.extend(y)
-            losses.append(loss)
-        return np.array(predictions), np.array(losses)
+        '''Calculating loss (and accuracy)'''
+        targets = [minibatch[i]['one_hot'] for i in range(len(minibatch))]
+        loss = self._calculate_error_and_accuracy(activations, targets)
+
+        predictions = activations
+        return np.array(predictions), np.array(loss)
 
     def _backward_pass(self, output, minibatch):
         """
@@ -165,16 +175,17 @@ class ConvolutionalNetwork:
 
         '''Backward pass for fully connected layer'''
         # First we need to backward pass the  fully connected layer with the activation from the last convolutional layer
-        layer_derivatives = self.dense_layers[0].derivation()
-        prev_layer_activation = self.convolutional_layers[-1].cached_activation
+        layer_derivatives = self.fully_connected_layer.derivation()
+        prev_layer_activation = self.convolutional_layers[-1].cached_activation #THIS IS CORRECT, but figure out if this should be flattened
         weight_gradients = []
-        last_fc_deltas = []
+        fc_deltas = []
         output_jacobians = []
         for j in range(len(minibatch)):
-            last_fc_deltas.append(np.dot(self.dense_layers[1].weights, deltas[j]) * layer_derivatives[j])
-            weight_gradients.append(np.einsum('i,j->ji', last_fc_deltas[j], prev_layer_activation[j]))
-            # TODO YOU ARE HERE: How to generate a kxixixj weight matrix for fully connected layer?
-            output_jacobians.append(np.einsum('l,klij ->kij', last_fc_deltas[j], self.convolutional_layers[-1].kernels))
+            fc_deltas.append(np.dot(self.dense_layers[0].weights, deltas[j]) * layer_derivatives[j])
+
+            weight_gradients.append(np.einsum('l,kij->kij', fc_deltas[j], prev_layer_activation[j]))
+
+            output_jacobians.append(np.einsum('l,ijkl ->ijk', fc_deltas[j], self.fully_connected_layer.weights))
         self.dense_layers[0].weight_gradient = np.average(weight_gradients, axis=0)
 
 
@@ -183,20 +194,19 @@ class ConvolutionalNetwork:
         # Delta jacobian has shape: (batch_size, number of filters, kernel_height, kernel_width)
         # Only passing one delta jacobian at a time to the backward pass function in the conv layer
 
-
-        # TODO Before any further backprop, make sure to obtain the correct jacobian and delta to pass back
-
         ''' Backward pass for convolutional layers'''
         for i in range(len(self.convolutional_layers) - 1, 0, -1):
-            upstream_feature_map = self.convolutional_layers[i - 1].cached_activation # TODO This would also have the batch size as first dimension
+            # TODO You are here
+            # TODO This would also have the batch size as first dimension
+            upstream_feature_map = self.convolutional_layers[i - 1].cached_activation
             updated_jacobians = []
             # Only passing one delta jacobian at a time to the backward pass function in the conv layer
-            for delta_jacobian in delta_jacobians:
+            for j in range(len(delta_jacobians)):
                 # Backward convolution is handled in each conv layer
                 updated_delta_jacobian, kernel_gradient = self.convolutional_layers[i].\
                     backward_pass(
-                        delta_jacobian,
-                        upstream_feature_map
+                        delta_jacobians[j],
+                        upstream_feature_map[j]
                     )
                 updated_jacobians.append(updated_delta_jacobian)
             delta_jacobians = np.array(updated_jacobians)
@@ -218,7 +228,7 @@ class ConvolutionalNetwork:
 
     '''Each of the error functions return an array of errors with error for each case'''
     def _cross_entropy(self, output, target):
-        error = -np.sum(target * np.log2(output) + 1e-15)
+        error = [-np.sum(target[i] * np.log2(output[i]) + 1e-15) for i in range(len(output))]
         return error
 
     def _sum_of_squared_errors(self, output, target):
@@ -249,28 +259,30 @@ class ConvolutionalNetwork:
 def main():
     image_size = 10
     num_filters = 6
+    raw_image = np.zeros((7, 7))
+    raw_image[0] = np.array([1, 1, 1, 1, 1, 1, 1])
+    test_image = np.array([raw_image])
+    print(test_image)
+    dummy_dataset = [{'class': 'bars', 'one_hot': [0, 1, 0, 0], 'image': test_image, 'flat_image': [1, 1, 1]},
+                     {'class': 'cross', 'one_hot': [1, 0, 0, 0], 'image': test_image, 'flat_image': [1, 1, 1]},
+                     {'class': 'bars', 'one_hot': [0, 1, 0, 0], 'image': test_image, 'flat_image': [1, 1, 1]},
+                     {'class': 'cross', 'one_hot': [1, 0, 0, 0], 'image': test_image, 'flat_image': [1, 1, 1]}
+                     ]
+
     specs = [
-        {'input_channels': 1, 'output_channels': num_filters,'kernel_size': (3,3),
+        {'spatial_dimensions':raw_image.shape, 'input_channels': 1, 'output_channels': num_filters,'kernel_size': (3,3),
             'stride': 1, 'mode': 'same', 'act_func': 'relu', 'lr': 0.01, 'type': 'conv2d'},
-        {'input_channels': num_filters, 'output_channels': num_filters*2,'kernel_size': (3,3),
+        {'spatial_dimensions':(5,5),'input_channels': num_filters, 'output_channels': num_filters*2,'kernel_size': (3,3),
             'stride': 1, 'mode': 'same', 'act_func': 'relu', 'lr': 0.01, 'type': 'conv2d'},
-        {'input_size': 3*3*num_filters*2, 'output_size': 4, 'act_func': 'sigmoid', 'type': 'hidden'},
-        {'input_size': 4, 'output_size': 4, 'act_func': 'sigmoid', 'type': 'output'},
+        {'input_size': 3*3*num_filters*2, 'output_size': 8, 'act_func': 'sigmoid', 'type': 'fully_connected'},
+        {'input_size': 8, 'output_size': 4, 'act_func': 'sigmoid', 'type': 'output'},
         {'input_size': 4, 'output_size': 4, 'act_func': 'softmax', 'type': 'softmax'}]
 
     convnet = ConvolutionalNetwork(specs, loss_function='cross_entropy')
     convnet.gen_network()
 
 
-    raw_image = np.zeros((7,7))
-    raw_image[0] = np.array([1,1,1,1,1,1,1])
-    test_image = np.array([raw_image])
-    print(test_image)
-    dummy_dataset = [{'class': 'bars','one_hot': [0,1,0,0], 'image': test_image, 'flat_image': [1,1,1]},
-                     {'class': 'cross','one_hot': [1,0,0,0], 'image': test_image, 'flat_image': [1,1,1]},
-                     {'class': 'bars', 'one_hot': [0, 1, 0, 0], 'image': test_image, 'flat_image': [1, 1, 1]},
-                     {'class': 'cross', 'one_hot': [1, 0, 0, 0], 'image': test_image, 'flat_image': [1, 1, 1]}
-                     ]
+
     feature_map = convnet.train(dummy_dataset, 1)
     print(feature_map)
 

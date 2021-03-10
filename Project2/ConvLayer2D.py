@@ -2,7 +2,8 @@ import numpy as np
 
 class ConvLayer2D:
 
-    def __init__(self, input_channels, output_channels, kernel_size, stride, mode, activation_function, lr):
+    def __init__(self, spatial_dimensions, input_channels, output_channels, kernel_size, stride, mode, activation_function, lr):
+        self.spatial_dimensions = spatial_dimensions
         self.input_channels = input_channels
         self.output_channels = output_channels
         self.kernel_size = kernel_size
@@ -14,7 +15,10 @@ class ConvLayer2D:
         self.l_type = 'conv2d'
         self.kernels = np.zeros((self.output_channels, self.input_channels, kernel_size[0], kernel_size[1]))  # TODO
         self.weight_gradients = None  # TODO
-        self.cached_activation = None
+        #calculating dimensions of output
+        output_dimensions = (output_channels, int(((spatial_dimensions[0] - kernel_size[0])/stride) + 1),
+                             int(((spatial_dimensions[1] - kernel_size[1])/stride) + 1)) # Eventual padding and mode
+        self.cached_activation = [np.zeros(output_dimensions)]
 
     def gen_kernels(self):
         for i in range(self.output_channels):
@@ -67,7 +71,9 @@ class ConvLayer2D:
                 y_idx += self.stride
                 out_y_idx += 1
         # TODO feature_map = activation(feature_map)
-        self.cached_activation = feature_map
+        self.cached_activation = [] # Removing initialized matrix constructed upon construction
+        self.cached_activation.append(feature_map) # Appending actual activation
+        # Mad hack, not very pretty
         return feature_map
 
     def backward_pass(self, delta_jacobian, upstream_feature_map):
@@ -106,21 +112,24 @@ class ConvLayer2D:
         pass
 
 def main():
-
-    spec = {'input_channels': 1, 'output_channels': 4,'kernel_size': (3, 3),
+    raw_image = np.zeros((7, 7))
+    spec = {'spatial_dimensions':raw_image.shape,'input_channels': 1, 'output_channels': 4,'kernel_size': (3, 3),
               'stride': 1, 'mode': 'same', 'act_func': 'relu', 'lr': 0.01, 'type': 'conv2d'}
 
-    test_layer = ConvLayer2D(spec['input_channels'],
-                                     spec['output_channels'],
-                                     spec['kernel_size'],
-                                     spec['stride'],
-                                     spec['mode'],
-                                     spec['act_func'],
-                                     spec['lr'])
+    test_layer = ConvLayer2D(
+        spec['spatial_dimensions'],
+        spec['input_channels'],
+        spec['output_channels'],
+        spec['kernel_size'],
+        spec['stride'],
+        spec['mode'],
+        spec['act_func'],
+        spec['lr'])
+
     test_layer.gen_kernels()
 
-    raw_image = np.zeros((5,5))
-    raw_image[0] = np.array([1,1,1,1,1])
+    #raw_image = np.zeros((5,5))
+    raw_image[0] = np.ones_like(raw_image[0])
     test_image = np.array([raw_image])
     print(test_image)
 
