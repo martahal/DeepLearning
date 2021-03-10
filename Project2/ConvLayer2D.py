@@ -14,11 +14,12 @@ class ConvLayer2D:
 
         self.l_type = 'conv2d'
         self.kernels = np.zeros((self.output_channels, self.input_channels, kernel_size[0], kernel_size[1]))  # TODO
-        self.weight_gradients = None  # TODO
+        self.filter_gradient = None  # TODO
+        self.cached_activation = []
         #calculating dimensions of output
         output_dimensions = (output_channels, int(((spatial_dimensions[0] - kernel_size[0])/stride) + 1),
                              int(((spatial_dimensions[1] - kernel_size[1])/stride) + 1)) # Eventual padding and mode
-        self.cached_activation = [np.zeros(output_dimensions)]
+        self.output_dimensions = [np.zeros(output_dimensions)]
 
     def gen_kernels(self):
         for i in range(self.output_channels):
@@ -71,7 +72,6 @@ class ConvLayer2D:
                 y_idx += self.stride
                 out_y_idx += 1
         # TODO feature_map = activation(feature_map)
-        self.cached_activation = [] # Removing initialized matrix constructed upon construction
         self.cached_activation.append(feature_map) # Appending actual activation
         # Mad hack, not very pretty
         return feature_map
@@ -106,6 +106,8 @@ class ConvLayer2D:
 #
         return new_jacobian, kernel_gradient # TODO New jacobian must be derived
 
+    def update_filters(self):
+        self.kernels = self.kernels - self.lr * self.filter_gradient
 
     def visualize_kernels(self):
         # TODO: implement visualization of kernels
