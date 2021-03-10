@@ -64,13 +64,13 @@ class FullyConnectedLayer:
         self.cached_activation.append(x)
         return x
 
-    def update_weights_and_bias(self):
+    def update_weights(self):
         """Sums and averages the array of weight and bias gradients into one weight gradient and one bias gradient
         updates the weights and biases for this layer"""
-        if self.l_type == 'input' or self.l_type == 'softmax':
-            pass
-        else:
-            self.weights = self.weights - self.lr * self.weight_gradient
+        new_weights = []
+        for weight in self.weights.transpose():
+            weight = weight.transpose()
+            new_weights.append(weight - self.lr * self.weight_gradient)
             # TODO Figure out how to do this
 
     def _sigmoid(self, z):
