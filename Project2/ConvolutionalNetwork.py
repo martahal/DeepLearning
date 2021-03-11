@@ -7,10 +7,10 @@ from Projects.Project2.DataGeneration2 import DataGeneration2
 
 class ConvolutionalNetwork:
 
-    def __init__(self, layer_specs, loss_function, learning_rate=0.01, verbose=False):
+    def __init__(self, layer_specs, loss_function, verbose, optionals):
         self.layer_specs = layer_specs
         self.loss_function = loss_function
-        self.lr = learning_rate
+        self.lr = optionals['lr'] if 'lr' in optionals else 0.01
         self.verbose = verbose
         self.dense_layers = []  # Array of FullyConnectedLayer object
         self.convolutional_layers = []   # Array of ConvLayer2D objects
@@ -139,8 +139,6 @@ class ConvolutionalNetwork:
         :param minibatch: shape((batch_size), image_channels, (image_width, image_height))
         :return: prediction, loss, (accuracy)
         """
-        predictions = []
-        losses = []
         activations = []
         for i in range(len(minibatch)):
             '''Forward pass through convolutional layers'''
@@ -225,7 +223,7 @@ class ConvolutionalNetwork:
             self.dense_layers[i].weight_gradient = np.average(weight_gradients, axis=0)
             deltas = new_deltas
 
-        '''Backward pass for fully connected layer'''
+        '''Backward pass linking dense layer and convolution layer'''
         # First we need to backward pass the  fully connected layer with the activation from the last convolutional layer
         layer_derivatives = self.fully_connected_layer.derivation()
         prev_layer_activation = self.convolutional_layers[-1].cached_activation #THIS IS CORRECT, but figure out if this should be flattened
@@ -248,7 +246,7 @@ class ConvolutionalNetwork:
 
         ''' Backward pass for convolutional layers'''
         for i in range(len(self.convolutional_layers)-1, -1, -1):
-            # TODO This would also have the batch size as first dimension
+
             if i == 0:
                 # in order to adjust filters in first convolutional layer
                 upstream_feature_map = [minibatch[k]['image'] for k in range(len(minibatch))]
@@ -264,7 +262,7 @@ class ConvolutionalNetwork:
                         delta_jacobians[j],
                         upstream_feature_map[j]
                     )
-                # testing
+                # TODO resolve
                 derived_jacobian = self.convolutional_layers[i].derivation(updated_delta_jacobian)
                 updated_jacobians.append(derived_jacobian)
                 #updated_jacobians.append(updated_delta_jacobian)
