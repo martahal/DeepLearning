@@ -1,4 +1,5 @@
 import numpy as np
+import matplotlib.pyplot as plt
 
 class ConvLayer2D:
 
@@ -134,8 +135,33 @@ class ConvLayer2D:
         self.kernels = self.kernels - self.lr * self.filter_gradient
 
     def visualize_kernels(self):
-        # TODO: implement visualization of kernels
-        pass
+        plot_rows = len(self.kernels)
+        plot_cols = len(self.kernels[0])
+
+        for i in range(len(self.kernels)):
+            for j in range(len(self.kernels[i])):
+
+                ax = plt.gca()
+
+                max_weight = 2 ** np.ceil(np.log2(np.abs(self.kernels[i,j]).max()))
+
+                ax.patch.set_facecolor('gray')
+                ax.set_aspect('equal', 'box')
+                ax.xaxis.set_major_locator(plt.NullLocator())
+                ax.yaxis.set_major_locator(plt.NullLocator())
+
+                for (x, y), w in np.ndenumerate(self.kernels[i,j]):
+                    color = 'white' if w > 0 else 'black'
+                    size = np.sqrt(abs(w) / max_weight)
+                    rect = plt.Rectangle([x - size / 2, y - size / 2], size, size,
+                                         facecolor=color, edgecolor=color)
+                    ax.add_patch(rect)
+
+                ax.autoscale_view()
+                ax.invert_yaxis()
+                #fig = plt.figure()
+                #ax = fig.add_subplot(plot_rows, plot_cols, i+j)
+                plt.show()
 
     def _sigmoid(self, feature_map):
         activation = np.vectorize(lambda fm: 1 / (1 + np.exp(-fm)))(feature_map)
