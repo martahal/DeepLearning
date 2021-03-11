@@ -13,8 +13,8 @@ class ConvLayer2D:
         self.lr = lr
 
         self.l_type = 'conv2d'
-        self.kernels = np.zeros((self.output_channels, self.input_channels, kernel_size[0], kernel_size[1]))  # TODO
-        self.filter_gradient = None  # TODO
+        self.kernels = np.zeros((self.output_channels, self.input_channels, kernel_size[0], kernel_size[1]))
+        self.filter_gradient = None
         self.cached_activation = []
         #calculating dimensions of output
         output_dimensions = (output_channels, int(((spatial_dimensions[0] - kernel_size[0])/stride) + 1),
@@ -26,7 +26,7 @@ class ConvLayer2D:
             scale = 1.0
             standard_deviation = scale/np.sqrt(np.prod(self.kernel_size))
             self.kernels[i] = (np.random.normal(loc=0, scale=standard_deviation, size=self.kernel_size))
-        # TODO: implement kernel generation
+
 
     def activation(self, feature_map):
         if self.activation_function == 'sigmoid':
@@ -44,7 +44,7 @@ class ConvLayer2D:
         else:
             raise NotImplementedError("You have either misspelled the activation function, "
                                       "or this activation function is not implemented")
-        # TODO: implement activation after convolution
+
         pass
 
     def derivation(self, jacobian):
@@ -61,7 +61,6 @@ class ConvLayer2D:
             return self._d_selu(jacobian)
         elif self.activation_function == 'linear':
             return self._d_linear(jacobian)
-
         else:
             raise NotImplementedError("You have either misspelled the activation function, "
                                       "or the derivative of this activation function is not implemented")
@@ -73,8 +72,6 @@ class ConvLayer2D:
         :return: activation_function(feature map), shape= ((batch_size), output_channels, output_width, output_height)
         """
         # TODO apply padding and different modes
-
-        # TODO: implement convolution
         n_filters, n_kernels_filter, filter_size, filter_height = self.kernels.shape
         n_kernels, input_width, input_height = input.shape
 
@@ -83,7 +80,6 @@ class ConvLayer2D:
 
         feature_map = np.zeros((n_filters, output_width, output_height))
 
-        # TODO extend so that this works for batch_size > 1
         for current_filter_idx in range(n_filters):
             y_idx = out_y_idx = 0
             # vertical filter movement
@@ -97,32 +93,29 @@ class ConvLayer2D:
                         self.kernels[current_filter_idx] *
                         input[:, y_idx:y_idx + filter_size, x_idx: x_idx + filter_size]
                         )
-                    # TODO cache this convolution operation in a lookup-table for easy backprop
+
                     x_idx += self.stride
                     out_x_idx += 1
                 y_idx += self.stride
                 out_y_idx += 1
         feature_map = self.activation(feature_map)
-        self.cached_activation.append(feature_map) # Appending actual activation
-        # Mad hack, not very pretty
+        self.cached_activation.append(feature_map)
         return feature_map
 
     def backward_pass(self, delta_jacobian, upstream_feature_map):
-        # TODO: decide responsibility for backward pass method
-        # TODO: implement backward pass for convolutional layer
-        '''Absolutely freestyling this. Lets see if it works'''
+        # TODO Comment on what im doing here
+        # TODO apply padding and different modes
         n_filters, n_kernels_filter, filter_width, filter_height = self.kernels.shape
         input_channels, fm_width, fm_height = upstream_feature_map.shape
 #
         #Initializing derivatives
         new_jacobian = np.zeros(upstream_feature_map.shape)
         kernel_gradient = np.zeros(self.kernels.shape)
-         #TODO this breaks somehow
         for current_filter_idx in range(n_filters):
             y_idx = out_y_idx = 0
             while y_idx + filter_height <= fm_height:
                 x_idx = out_x_idx = 0
-                while x_idx + filter_width <= fm_width: #TODO Comment on what im doing here
+                while x_idx + filter_width <= fm_width:
                     kernel_gradient[current_filter_idx] += \
                         delta_jacobian[current_filter_idx, out_y_idx, out_x_idx] * \
                         upstream_feature_map[:, y_idx: y_idx + filter_height, x_idx: x_idx+ filter_width]

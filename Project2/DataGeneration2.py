@@ -138,7 +138,7 @@ class DataGeneration2:
     @staticmethod
     def draw_image(data):
         plt.title(data['class'])
-        plt.imshow(data['image'], cmap='gray')
+        plt.imshow(data['image'][0], cmap='gray')
         plt.show()
 
 

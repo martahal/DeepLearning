@@ -1,0 +1,70 @@
+[GLOBALS]
+loss: cross_entropy
+verbose: True
+batch_size: 7
+
+#Optional parameters
+lr: 0.01
+
+[CONV2D_1]
+spatial_dimensions: (13, 13)
+input_channels: 1
+output_channels: 3
+kernel_size = (3, 3)
+stride: 2
+mode: same
+act_func: selu
+lr: 0.01
+type: conv2d
+
+
+[CONV2D_2]
+spatial_dimensions: (6, 6)
+input_channels: 3
+output_channels: 6
+kernel_size = (3, 3)
+stride: 1
+mode: same
+act_func: selu
+lr: 0.01
+type: conv2d
+
+
+[FULLY CONNECTED]
+# Fully connected input size must be exactly
+# spatial width x height x number of channels
+input_size: 96
+output_size: 8
+act_func: sigmoid
+# must be marked with fully connected type
+type: fully_connected
+
+
+[DENSE_1]
+# Output layer size must be exactly 4
+input_size: 8
+output_size: 4
+act_func: sigmoid
+type: output
+
+#optional parameters
+w_range: (-0.001, 0.001)
+lr: 4
+
+
+[SOFTMAX]
+# Softmax layer size must be exactly 4
+input_size:4
+output_size: 4
+act_func: softmax
+type: softmax
+
+
+[DATA]
+#all parameters must be defined
+noise: 0
+img_size: 13
+set_size: 200
+train_val_test: (0.7, 0.2, 0.1)
+fig_centered: True
+draw: False
