@@ -61,7 +61,7 @@ for section in config.sections():
 
 print(datadict)
 print(layerspecs)
-new_network = ConvolutionalNetwork(layerspecs, globals['loss'], globals['verbose'], globals)
+new_network = ConvolutionalNetwork(layerspecs, globals['loss'], globals['verbose'], globals['visualize_kernels'], globals)
 new_network.gen_network()
 
 

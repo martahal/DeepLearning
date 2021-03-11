@@ -1,7 +1,8 @@
 [GLOBALS]
 loss: cross_entropy
-verbose: True
 batch_size: 7
+verbose: True
+visualize_kernels: True
 
 #Optional parameters
 lr: 0.01

@@ -7,11 +7,12 @@ from Projects.Project2.DataGeneration2 import DataGeneration2
 
 class ConvolutionalNetwork:
 
-    def __init__(self, layer_specs, loss_function, verbose, optionals):
+    def __init__(self, layer_specs, loss_function, verbose,visualize_kernels, optionals):
         self.layer_specs = layer_specs
         self.loss_function = loss_function
         self.lr = optionals['lr'] if 'lr' in optionals else 0.01
         self.verbose = verbose
+        self.visualize_kernels = visualize_kernels
         self.dense_layers = []  # Array of FullyConnectedLayer object
         self.convolutional_layers = []   # Array of ConvLayer2D objects
         self.fully_connected_layer = None
@@ -107,9 +108,9 @@ class ConvolutionalNetwork:
                       '\nError: ', test_error[i] )
 
         print('Test loss: ', np.average(test_error))
-        self._plot_learning_progress(training_loss, validation_loss, test_loss, batch_num)
+        self._plot_learning_progress_and_kernels(training_loss, validation_loss, test_loss, batch_num)
 
-    def _plot_learning_progress(self, training_loss, validation_loss, test_loss, batch_num):
+    def _plot_learning_progress_and_kernels(self, training_loss, validation_loss, test_loss, batch_num):
         # Plotting learning progress:
         x1 = np.linspace(0, batch_num, len(training_loss))
         plt.plot(x1, training_loss, 'b', label='Training loss')
@@ -132,6 +133,10 @@ class ConvolutionalNetwork:
         plt.title('Learning progress')
         plt.legend()
         plt.show()
+
+        if self.visualize_kernels:
+            for conv_layer in self.convolutional_layers:
+                conv_layer.visualize_kernels()
 
     def _forward_pass(self, minibatch):
         """
@@ -315,26 +320,26 @@ class ConvolutionalNetwork:
 
 def main():
 
-    #raw_image = np.zeros((7, 7))
-    #raw_image[0] = np.array([1, 1, 1, 1, 1, 1, 1])
-    #test_image = np.array([raw_image])
-    #print(test_image)
+    raw_image = np.zeros((5,5))
+    raw_image[0] = np.array([1, 1, 1, 1, 1])
+    test_image = np.array([raw_image])
+    print(test_image)
 
-    #dummy_dataset = [{'class': 'bars', 'one_hot': [0, 1, 0, 0], 'image': test_image, 'flat_image': [1, 1, 1]},
-    #                 {'class': 'cross', 'one_hot': [1, 0, 0, 0], 'image': test_image, 'flat_image': [1, 1, 1]},
-    #                 {'class': 'bars', 'one_hot': [0, 1, 0, 0], 'image': test_image, 'flat_image': [1, 1, 1]},
-    #                 {'class': 'cross', 'one_hot': [1, 0, 0, 0], 'image': test_image, 'flat_image': [1, 1, 1]}
-    #                 ]
+    dummy_dataset = [{'class': 'bars', 'one_hot': [0, 1, 0, 0], 'image': test_image, 'flat_image': [1, 1, 1]},
+                     {'class': 'cross', 'one_hot': [1, 0, 0, 0], 'image': test_image, 'flat_image': [1, 1, 1]},
+                     {'class': 'bars', 'one_hot': [0, 1, 0, 0], 'image': test_image, 'flat_image': [1, 1, 1]},
+                     {'class': 'cross', 'one_hot': [1, 0, 0, 0], 'image': test_image, 'flat_image': [1, 1, 1]}
+                     ]
 
-    image_size = 13
+    #image_size = 13
     num_filters = 3
-    real_dataset = DataGeneration2(noise=0.0, img_size=image_size, set_size=2000,
-                                  flatten=True, fig_centered=True,
-                                  train_val_test=(0.9, 0.05, 0.05), draw=False)
-    real_dataset.gen_dataset()
+    # real_dataset = DataGeneration2(noise=0.0, img_size=image_size, set_size=2000,
+    #                             flatten=True, fig_centered=True,
+    #                             train_val_test=(0.9, 0.05, 0.05), draw=False)
+    # real_dataset.gen_dataset()
 
     specs = [
-        {'spatial_dimensions':(image_size, image_size), 'input_channels': 1, 'output_channels': num_filters,'kernel_size': (3,3),
+        {'spatial_dimensions':(5,5), 'input_channels': 1, 'output_channels': num_filters,'kernel_size': (3,3),
             'stride': 2, 'mode': 'same', 'act_func': 'selu', 'lr': 0.01, 'type': 'conv2d'},
         {'spatial_dimensions':(6,6),'input_channels': num_filters, 'output_channels': num_filters*2,'kernel_size': (3,3),
             'stride': 1, 'mode': 'same', 'act_func': 'selu', 'lr': 0.01, 'type': 'conv2d'},
@@ -347,10 +352,10 @@ def main():
     convnet.gen_network()
 
     convnet.train(
-        real_dataset.train_set,
-        real_dataset.val_set,
-        real_dataset.test_set,
-        batch_size=16)
+        dummy_dataset,
+        dummy_dataset,
+        dummy_dataset,
+        batch_size=1)
 
     #feature_map = convnet.train(dummy_dataset, 2)
 
