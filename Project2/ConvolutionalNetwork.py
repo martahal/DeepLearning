@@ -135,8 +135,8 @@ class ConvolutionalNetwork:
         plt.show()
 
         if self.visualize_kernels:
-            for conv_layer in self.convolutional_layers:
-                conv_layer.visualize_kernels()
+            for i in range(len(self.convolutional_layers)):
+                self.convolutional_layers[i].visualize_kernels(i)
 
     def _forward_pass(self, minibatch):
         """
@@ -340,15 +340,15 @@ def main():
 
     specs = [
         {'spatial_dimensions':(5,5), 'input_channels': 1, 'output_channels': num_filters,'kernel_size': (3,3),
-            'stride': 2, 'mode': 'same', 'act_func': 'selu', 'lr': 0.01, 'type': 'conv2d'},
-        {'spatial_dimensions':(6,6),'input_channels': num_filters, 'output_channels': num_filters*2,'kernel_size': (3,3),
             'stride': 1, 'mode': 'same', 'act_func': 'selu', 'lr': 0.01, 'type': 'conv2d'},
-        {'input_size': 4 * 4 *num_filters*2, 'output_size': 8, 'act_func': 'sigmoid', 'type': 'fully_connected'},
+        {'spatial_dimensions':(3,3),'input_channels': num_filters, 'output_channels': num_filters*2,'kernel_size': (3,3),
+            'stride': 1, 'mode': 'same', 'act_func': 'selu', 'lr': 0.01, 'type': 'conv2d'},
+        {'input_size': 3*3*num_filters*2, 'output_size': 8, 'act_func': 'sigmoid', 'type': 'fully_connected'},
         {'input_size': 8, 'output_size': 4, 'act_func': 'sigmoid', 'type': 'output'},
         # NOTE Cannot remove intermediate dense layer yet
         {'input_size': 4, 'output_size': 4, 'act_func': 'softmax', 'type': 'softmax'}]
 
-    convnet = ConvolutionalNetwork(specs, loss_function='cross_entropy', verbose=True)
+    convnet = ConvolutionalNetwork(specs, loss_function='cross_entropy', verbose=True, visualize_kernels=True, optionals= ['something'])
     convnet.gen_network()
 
     convnet.train(

@@ -134,14 +134,13 @@ class ConvLayer2D:
     def update_filters(self):
         self.kernels = self.kernels - self.lr * self.filter_gradient
 
-    def visualize_kernels(self):
-        plot_rows = len(self.kernels)
-        plot_cols = len(self.kernels[0])
-
-        for i in range(len(self.kernels)):
-            for j in range(len(self.kernels[i])):
-
-                ax = plt.gca()
+    def visualize_kernels(self, layer_index):
+        num_filters = len(self.kernels)
+        num_kernel_weights = len(self.kernels[0])
+        fig = plt.figure()
+        for i in range(num_filters):
+            for j in range(num_kernel_weights):
+                ax = fig.add_subplot(num_kernel_weights, num_filters, num_filters*(j) + i + 1, title=f"W{j+1} filter {i+1} ")
 
                 max_weight = 2 ** np.ceil(np.log2(np.abs(self.kernels[i,j]).max()))
 
@@ -159,9 +158,9 @@ class ConvLayer2D:
 
                 ax.autoscale_view()
                 ax.invert_yaxis()
-                #fig = plt.figure()
-                #ax = fig.add_subplot(plot_rows, plot_cols, i+j)
-                plt.show()
+
+
+        plt.show()
 
     def _sigmoid(self, feature_map):
         activation = np.vectorize(lambda fm: 1 / (1 + np.exp(-fm)))(feature_map)
