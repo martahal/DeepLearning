@@ -1,4 +1,5 @@
 import numpy as np
+import matplotlib.pyplot as plt
 from Projects.Project2.ConvLayer2D import ConvLayer2D
 from Projects.Project2.DenseLayer import DenseLayer
 from Projects.Project2.FullyConnectedLayer import FullyConnectedLayer
@@ -71,6 +72,7 @@ class ConvolutionalNetwork:
         """
         training_loss = []
         validation_loss = []
+        test_loss = []
         batch_num = 1
         for i in range(0, len(training_set), batch_size):
             '''Forward pass'''
@@ -95,6 +97,7 @@ class ConvolutionalNetwork:
             validation_loss.append(np.average(validation_error))
             batch_num += 1
         test_output, test_error = self._forward_pass(test_set)
+        test_loss.append(np.average(test_error))
         if self.verbose:
             for i in range(len(test_set)):
                 print('\nInput images: \n', test_set[i]['image'][0],
@@ -104,6 +107,31 @@ class ConvolutionalNetwork:
                       '\nError: ', test_error[i] )
 
         print('Test loss: ', np.average(test_error))
+        self._plot_learning_progress(training_loss, validation_loss, test_loss, batch_num)
+
+    def _plot_learning_progress(self, training_loss, validation_loss, test_loss, batch_num):
+        # Plotting learning progress:
+        x1 = np.linspace(0, batch_num, len(training_loss))
+        plt.plot(x1, training_loss, 'b', label='Training loss')
+        x2 = np.linspace(0, batch_num, len(validation_loss))
+        plt.plot(x2, validation_loss, 'y', label='Validation loss')
+
+        plt.hlines(np.average(test_loss),xmin=batch_num, xmax=batch_num+ 0.1*batch_num, label= 'Test loss', colors='r')
+
+        plt.xlabel('Minibatch')
+        if self.loss_function == 'cross_entropy':
+            plt.ylabel('Cross Entropy Loss')
+            plt.ylim(bottom=0,top=2.1)
+            indicator = np.ones_like(training_loss) * 2
+            plt.plot(x1, indicator, 'g--', label='Pure guessing')
+        elif self.loss_function == 'MSE':
+            plt.ylabel('Mean Squared Error Loss')
+            plt.ylim(bottom=0, top=0.2)
+            indicator = np.ones_like(training_loss) * 0.1875
+            plt.plot(x1, indicator, 'g--', label='Pure guessing')
+        plt.title('Learning progress')
+        plt.legend()
+        plt.show()
 
     def _forward_pass(self, minibatch):
         """
@@ -236,8 +264,10 @@ class ConvolutionalNetwork:
                         delta_jacobians[j],
                         upstream_feature_map[j]
                     )
-                #Purely testing something
-                updated_jacobians.append(updated_delta_jacobian)
+                # testing
+                derived_jacobian = self.convolutional_layers[i].derivation(updated_delta_jacobian)
+                updated_jacobians.append(derived_jacobian)
+                #updated_jacobians.append(updated_delta_jacobian)
                 filter_gradients.append(filter_gradient)
             delta_jacobians = np.array(updated_jacobians)
             self.convolutional_layers[i].filter_gradient = np.average(filter_gradients,axis=0)
@@ -286,28 +316,31 @@ class ConvolutionalNetwork:
 
 
 def main():
-    image_size = 10
-    num_filters = 5
-    raw_image = np.zeros((7, 7))
-    raw_image[0] = np.array([1, 1, 1, 1, 1, 1, 1])
-    test_image = np.array([raw_image])
-    print(test_image)
-    dummy_dataset = [{'class': 'bars', 'one_hot': [0, 1, 0, 0], 'image': test_image, 'flat_image': [1, 1, 1]},
-                     {'class': 'cross', 'one_hot': [1, 0, 0, 0], 'image': test_image, 'flat_image': [1, 1, 1]},
-                     {'class': 'bars', 'one_hot': [0, 1, 0, 0], 'image': test_image, 'flat_image': [1, 1, 1]},
-                     {'class': 'cross', 'one_hot': [1, 0, 0, 0], 'image': test_image, 'flat_image': [1, 1, 1]}
-                     ]
-    real_dataset = DataGeneration2(noise=0.0, img_size=image_size, set_size=100,
+
+    #raw_image = np.zeros((7, 7))
+    #raw_image[0] = np.array([1, 1, 1, 1, 1, 1, 1])
+    #test_image = np.array([raw_image])
+    #print(test_image)
+
+    #dummy_dataset = [{'class': 'bars', 'one_hot': [0, 1, 0, 0], 'image': test_image, 'flat_image': [1, 1, 1]},
+    #                 {'class': 'cross', 'one_hot': [1, 0, 0, 0], 'image': test_image, 'flat_image': [1, 1, 1]},
+    #                 {'class': 'bars', 'one_hot': [0, 1, 0, 0], 'image': test_image, 'flat_image': [1, 1, 1]},
+    #                 {'class': 'cross', 'one_hot': [1, 0, 0, 0], 'image': test_image, 'flat_image': [1, 1, 1]}
+    #                 ]
+
+    image_size = 13
+    num_filters = 3
+    real_dataset = DataGeneration2(noise=0.0, img_size=image_size, set_size=2000,
                                   flatten=True, fig_centered=True,
                                   train_val_test=(0.9, 0.05, 0.05), draw=False)
     real_dataset.gen_dataset()
 
     specs = [
         {'spatial_dimensions':(image_size, image_size), 'input_channels': 1, 'output_channels': num_filters,'kernel_size': (3,3),
-            'stride': 1, 'mode': 'same', 'act_func': 'elu', 'lr': 0.01, 'type': 'conv2d'},
-        {'spatial_dimensions':(8,8),'input_channels': num_filters, 'output_channels': num_filters*2,'kernel_size': (3,3),
-            'stride': 1, 'mode': 'same', 'act_func': 'elu', 'lr': 0.01, 'type': 'conv2d'},
-        {'input_size': 6 * 6 *num_filters*2, 'output_size': 8, 'act_func': 'sigmoid', 'type': 'fully_connected'},
+            'stride': 2, 'mode': 'same', 'act_func': 'selu', 'lr': 0.01, 'type': 'conv2d'},
+        {'spatial_dimensions':(6,6),'input_channels': num_filters, 'output_channels': num_filters*2,'kernel_size': (3,3),
+            'stride': 1, 'mode': 'same', 'act_func': 'selu', 'lr': 0.01, 'type': 'conv2d'},
+        {'input_size': 4 * 4 *num_filters*2, 'output_size': 8, 'act_func': 'sigmoid', 'type': 'fully_connected'},
         {'input_size': 8, 'output_size': 4, 'act_func': 'sigmoid', 'type': 'output'},
         # NOTE Cannot remove intermediate dense layer yet
         {'input_size': 4, 'output_size': 4, 'act_func': 'softmax', 'type': 'softmax'}]
@@ -319,7 +352,7 @@ def main():
         real_dataset.train_set,
         real_dataset.val_set,
         real_dataset.test_set,
-        batch_size=2)
+        batch_size=16)
 
     #feature_map = convnet.train(dummy_dataset, 2)
 

@@ -47,20 +47,20 @@ class ConvLayer2D:
         # TODO: implement activation after convolution
         pass
 
-    def derivation(self):
+    def derivation(self, jacobian):
         """Inserts the cached activation vector in the derivative function defined for this layer"""
         if self.activation_function == 'sigmoid':
-            return self._d_sigmoid(self.cached_activation)
+            return self._d_sigmoid(jacobian)
         elif self.activation_function == 'tanh':
-            return self._d_tanh(self.cached_activation)
+            return self._d_tanh(jacobian)
         elif self.activation_function == 'relu':
-            return self._d_relu(self.cached_activation)
+            return self._d_relu(jacobian)
         elif self.activation_function == 'elu':
-            return self._d_elu(self.cached_activation)
+            return self._d_elu(jacobian)
         elif self.activation_function == 'selu':
-            return self._d_selu(self.cached_activation)
+            return self._d_selu(jacobian)
         elif self.activation_function == 'linear':
-            return self._d_linear(self.cached_activation)
+            return self._d_linear(jacobian)
 
         else:
             raise NotImplementedError("You have either misspelled the activation function, "
