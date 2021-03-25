@@ -13,7 +13,7 @@ input_channels: 1
 output_channels: 3
 kernel_size = (3, 3)
 stride: 2
-mode: same
+mode: valid
 act_func: selu
 lr: 0.01
 type: conv2d
@@ -25,7 +25,7 @@ input_channels: 3
 output_channels: 6
 kernel_size = (3, 3)
 stride: 1
-mode: same
+mode: valid
 act_func: selu
 lr: 0.01
 type: conv2d
@@ -65,7 +65,7 @@ type: softmax
 #all parameters must be defined
 noise: 0
 img_size: 13
-set_size: 200
+set_size: 20000
 train_val_test: (0.7, 0.2, 0.1)
 fig_centered: True
 draw: False

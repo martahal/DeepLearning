@@ -74,12 +74,22 @@ class ConvLayer2D:
         """
         # TODO apply padding and different modes
         n_filters, n_kernels_filter, filter_size, filter_height = self.kernels.shape
-        n_kernels, input_width, input_height = input.shape
 
-        output_width = int((input_width - filter_size)/self.stride) + 1
-        output_height = int((input_height - filter_size)/self.stride) + 1
+        if self.mode == 'valid':
+            n_kernels, input_width, input_height = input.shape
+            output_width = int((input_width - filter_size)/self.stride) + 1
+            output_height = int((input_height - filter_size)/self.stride) + 1
+            feature_map = np.zeros((n_filters, output_width, output_height))
+        elif self.mode == 'same':
 
-        feature_map = np.zeros((n_filters, output_width, output_height))
+            padding = self.stride
+            padded_input = np.zeros(shape= (input.shape[0] + padding, input.shape[1] + padding) )
+            #padded_input[padding:] = input
+            pass
+        elif self.mode == 'full':
+            pass
+
+
 
         for current_filter_idx in range(n_filters):
             y_idx = out_y_idx = 0
@@ -108,7 +118,7 @@ class ConvLayer2D:
         # TODO apply padding and different modes
         n_filters, n_kernels_filter, filter_width, filter_height = self.kernels.shape
         input_channels, fm_width, fm_height = upstream_feature_map.shape
-#
+
         #Initializing derivatives
         new_jacobian = np.zeros(upstream_feature_map.shape)
         kernel_gradient = np.zeros(self.kernels.shape)
@@ -120,7 +130,7 @@ class ConvLayer2D:
                     kernel_gradient[current_filter_idx] += \
                         delta_jacobian[current_filter_idx, out_y_idx, out_x_idx] * \
                         upstream_feature_map[:, y_idx: y_idx + filter_height, x_idx: x_idx+ filter_width]
-##
+
                     new_jacobian[:, y_idx:y_idx + filter_height, x_idx: x_idx + filter_width] += \
                         delta_jacobian[current_filter_idx, out_y_idx, out_x_idx] * \
                         self.kernels[current_filter_idx]
@@ -159,7 +169,6 @@ class ConvLayer2D:
                 ax.autoscale_view()
                 ax.invert_yaxis()
 
-
         plt.show()
 
     def _sigmoid(self, feature_map):
@@ -176,6 +185,7 @@ class ConvLayer2D:
 
     def _d_tanh(self, activation):
         d_activation = np.vectorize(lambda a: 1 - a**2)(activation)
+        return d_activation
 
     def _relu(self, feature_map):
         activation = np.copy(feature_map)

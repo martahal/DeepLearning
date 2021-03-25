@@ -267,7 +267,7 @@ class ConvolutionalNetwork:
                         delta_jacobians[j],
                         upstream_feature_map[j]
                     )
-                # TODO resolve
+
                 derived_jacobian = self.convolutional_layers[i].derivation(updated_delta_jacobian)
                 updated_jacobians.append(derived_jacobian)
                 #updated_jacobians.append(updated_delta_jacobian)
@@ -340,10 +340,10 @@ def main():
 
     specs = [
         {'spatial_dimensions':(5,5), 'input_channels': 1, 'output_channels': num_filters,'kernel_size': (3,3),
-            'stride': 1, 'mode': 'same', 'act_func': 'selu', 'lr': 0.01, 'type': 'conv2d'},
+            'stride': 1, 'mode': 'valid', 'act_func': 'selu', 'lr': 0.01, 'type': 'conv2d'},
         {'spatial_dimensions':(3,3),'input_channels': num_filters, 'output_channels': num_filters*2,'kernel_size': (3,3),
-            'stride': 1, 'mode': 'same', 'act_func': 'selu', 'lr': 0.01, 'type': 'conv2d'},
-        {'input_size': 3*3*num_filters*2, 'output_size': 8, 'act_func': 'sigmoid', 'type': 'fully_connected'},
+            'stride': 1, 'mode': 'valid', 'act_func': 'selu', 'lr': 0.01, 'type': 'conv2d'},
+        {'input_size': num_filters*2, 'output_size': 8, 'act_func': 'sigmoid', 'type': 'fully_connected'},
         {'input_size': 8, 'output_size': 4, 'act_func': 'sigmoid', 'type': 'output'},
         # NOTE Cannot remove intermediate dense layer yet
         {'input_size': 4, 'output_size': 4, 'act_func': 'softmax', 'type': 'softmax'}]
