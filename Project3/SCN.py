@@ -47,7 +47,7 @@ class SCN(nn.Module):
             f"Expected output of forward pass to be: {expected_shape}, but got: {output.shape}"
 
 def main():
-    epochs = 10
+    epochs = 50
     batch_size = 16
     learning_rate = 0.0002
     loss_function = 'cross_entropy'
@@ -56,7 +56,7 @@ def main():
     #Loading FashionMNIST
     num_classes = 10
     dataloaders = load_fashion_mnist(batch_size, D1_fraction=0.8, validation_fraction=0.1, test_fraction=0.1)
-    input_size = (3,28,28)
+    input_size = (1,28,28)
     latent_vector_size = 256
 
     encoder = Encoder(input_size=input_size, num_filters=4, latent_vector_size=latent_vector_size)

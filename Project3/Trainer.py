@@ -63,7 +63,7 @@ class Trainer:
 
         for epoch in range(self.epochs):
             for X_batch, Y_batch in self.d2_train_dataloader:
-                loss = self._classifier_training_step(X_batch,Y_batch)
+                loss = self._classifier_training_step(X_batch, Y_batch)
                 self.train_history['loss'][self.global_step] = loss
                 self.global_step += 1
             # Validate model for each epoch
@@ -89,7 +89,7 @@ class Trainer:
         :return: Loss
         """
         # Forward pass through model
-        predictions = self.model(X_batch)
+        predictions, aux = self.model(X_batch) # produces a tuple for some reason. fix found here: https://github.com/pytorch/vision/issues/302#issuecomment-341163548
         # Calculating loss
         loss = self.loss_function(predictions, Y_batch)
         # Backward pass
@@ -127,7 +127,7 @@ class Trainer:
         with torch.no_grad():
             for (X_batch, Y_batch) in dataloader:
                 # Forward pass the images through our model
-                output_probs = model(X_batch)
+                output_probs, aux = model(X_batch) # produces a tuple for some reason. fix found here: https://github.com/pytorch/vision/issues/302#issuecomment-341163548
 
                 # Compute Loss and Accuracy
                 average_loss += loss_criterion(output_probs, Y_batch)

@@ -21,13 +21,16 @@ def load_fashion_mnist(batch_size :int, D1_fraction: float = 0.8, validation_fra
     :return: List of torch.utils.data.DataLoader, D1_train_dataloader, D2_train_dataloader, D2_val_dataloader, D2_test_dataloader
     """
     # TODO resolve whether this returns list or tuple
+
+    fashion_mnist_mean = (0.5,)
+    fashion_mnist_std = (0.25,)
     transform_train = transforms.Compose([
         transforms.ToTensor(),
-        transforms.Normalize(mean, std)
+        transforms.Normalize(fashion_mnist_mean, fashion_mnist_std)
     ])
     transform_test = transforms.Compose([
         transforms.ToTensor(),
-        transforms.Normalize(mean, std)
+        transforms.Normalize(fashion_mnist_mean, fashion_mnist_std)
     ])
 
     data_train = datasets.FashionMNIST('data',
@@ -71,7 +74,7 @@ def load_fashion_mnist(batch_size :int, D1_fraction: float = 0.8, validation_fra
                                                     sampler=d2_val_sampler,
                                                     batch_size=batch_size,
                                                     drop_last=True)
-    d2_test_dataloader = torch.utils.data.DataLoader(data_test,
+    d2_test_dataloader = torch.utils.data.DataLoader(data_train,  # TODO Resolve quickfix. Check if its okay to use training data as test data and how this complies with the assignment
                                                      sampler=d2_test_sampler,
                                                      batch_size=batch_size,
                                                      shuffle=False)
