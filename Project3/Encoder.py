@@ -35,7 +35,7 @@ class Encoder(nn.Module):
        """
        Performs the forward pass of the encoder
        :param x:  tensor, image input shape [batch size, image_width, image_height]
-       :return output: the latent vector of the encoder
+       :return output: the latent vector of the encoder, shape [batch size, latent vector size]
        """
        x = self.model(x)
        output =  x

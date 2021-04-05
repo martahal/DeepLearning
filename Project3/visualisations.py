@@ -32,8 +32,8 @@ def plot_t_sne(model, visualisation_data):
     """
     Creates a t-SNE plot of the output of a model, by feeding the data to be visualised forward through the model
     :param model: nn.Module, Will use the encoder of a semi supervised classifier. May be trained or not.
-    :param visualisation_data:
-    :return:
+    :param visualisation_data: The data to feed through the model and be visualised
+
     """
     latent_vectors = []
     classes = []
