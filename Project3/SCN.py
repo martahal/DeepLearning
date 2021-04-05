@@ -1,10 +1,12 @@
 from torch import nn
-from Projects.Project3 import Trainer
+import matplotlib.pyplot as plt
 
+from Projects.Project3 import Trainer
 from Projects.Project3.Encoder import Encoder
 from Projects.Project3.ClassifierHead import ClassifierHead
 from Projects.Project3.Trainer import Trainer
 from Projects.Project3.Dataloader import load_fashion_mnist
+from Projects.Project3 import visualisations
 
 
 class SCN(nn.Module):
@@ -46,8 +48,28 @@ class SCN(nn.Module):
         assert output.shape == (batch_size, self.num_classes), \
             f"Expected output of forward pass to be: {expected_shape}, but got: {output.shape}"
 
+def loss_and_accuracy_plots(trainer):
+    plt.figure(figsize=(20, 8))
+    plt.subplot(1, 2, 1)
+    plt.title(f" {trainer.loss_function} loss")
+    visualisations.plot_metric(trainer.train_history['loss'], label='Training loss', averaged_plot=True)
+    visualisations.plot_metric(trainer.validation_history['loss'], label='Validation loss', averaged_plot= False)
+    plt.hlines(trainer.test_loss,xmin=trainer.global_step,xmax=trainer.global_step + trainer.global_step * 0.1,
+               label= 'Test loss', colors='r')
+    plt.legend()
+    plt.subplot(1,2,2)
+    plt.title('Accuracy')
+    visualisations.plot_metric(trainer.train_history['accuracy'], label='Training accuracy', averaged_plot= True)
+    visualisations.plot_metric(trainer.validation_history['accuracy'], label='Validation accuracy', averaged_plot= False)
+    plt.hlines(trainer.test_accuracy,xmin=trainer.global_step, xmax=trainer.global_step + trainer.global_step * 0.1,
+               label='Test accuracy', colors='r')
+    plt.legend()
+    plt.show()
+
+
+
 def main():
-    epochs = 50
+    epochs = 10
     batch_size = 16
     learning_rate = 0.0002
     loss_function = 'cross_entropy'
@@ -70,7 +92,19 @@ def main():
                           dataloaders=dataloaders,
                           loss_function=loss_function,
                           optimizer=optimizer)
+    # create pre-training t-SNE plot
+
+    # Train network
     SCN_trainer.do_classifier_train()
+
+    # Create accuracy and loss plots
+    loss_and_accuracy_plots(SCN_trainer)
+
+    # Create t-SNE plots
+    # TODO First hack a plot, then dehack to apply plot for untrained, semi-supervised trained and supervised trained
+    visualisation_data = SCN_trainer.d2_test_dataloader
+    visualisations.plot_t_sne(SCN_trainer.model.encoder, visualisation_data)
+
 
 if __name__ == '__main__':
     main()

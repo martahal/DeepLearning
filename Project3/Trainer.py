@@ -63,19 +63,21 @@ class Trainer:
 
         for epoch in range(self.epochs):
             for X_batch, Y_batch in self.d2_train_dataloader:
-                loss = self._classifier_training_step(X_batch, Y_batch)
-                self.train_history['loss'][self.global_step] = loss
+                train_loss, train_accuracy = self._classifier_training_step(X_batch, Y_batch)
+                self.train_history['loss'][self.global_step] = train_loss
+                self.train_history['accuracy'][self.global_step] = train_accuracy
                 self.global_step += 1
+
             # Validate model for each epoch
             val_loss, val_accuracy = self._validation(epoch)
             self.validation_history['loss'][self.global_step] = val_loss
             self.validation_history['accuracy'][self.global_step] = val_accuracy
         # Test model after all epochs
-        test_loss, test_accuracy = self._compute_loss_and_accuracy(self.d2_test_dataloader,
+        self.test_loss, self.test_accuracy = self._compute_loss_and_accuracy(self.d2_test_dataloader,
                                                                    self.model,
                                                                    self.loss_function)
-        print(f'Test loss: {test_loss}',
-              f'Test accuracy: {test_accuracy}',
+        print(f'Test loss: {self.test_loss}',
+              f'Test accuracy: {self.test_accuracy}',
               sep= ', ')
 
     def do_autoencoder_train(self):
@@ -86,20 +88,28 @@ class Trainer:
         Performs forward and backward pass for each incoming batch.
         :param X_batch: Batch of images
         :param Y_batch: Batch of labels
-        :return: Loss
+        :return: Training loss: value of training loss. Training accuracy: fraction of batch that was correctly labelled
         """
         # Forward pass through model
-        predictions, aux = self.model(X_batch) # produces a tuple for some reason. fix found here: https://github.com/pytorch/vision/issues/302#issuecomment-341163548
-        # Calculating loss
-        loss = self.loss_function(predictions, Y_batch)
-        # Backward pass
-        loss.backward()
+        output_probs, aux = self.model(X_batch) # produces a tuple for some reason. fix found here: https://github.com/pytorch/vision/issues/302#issuecomment-341163548
 
+        # Calculating loss
+        train_loss = self.loss_function(output_probs, Y_batch)
+
+        # Calculating accuracy
+        predictions = torch.argmax(output_probs, dim=1)
+        total_correct = (predictions == Y_batch).sum().item()
+        total_images = predictions.shape[0]
+        train_accuracy = total_correct / total_images
+
+        # Backward pass
+        train_loss.backward()
         self.optimizer.step()
+
         # Reset gradients
         self.optimizer.zero_grad()
 
-        return loss
+        return train_loss, train_accuracy
 
     def _validation(self, epoch):
         # Set module in evaluation mode
