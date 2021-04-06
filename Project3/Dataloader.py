@@ -9,7 +9,8 @@ mean = (0.5, 0.5, 0.5)
 std = (.25, .25, .25)
 
 
-def load_mnist(batch_size :int, D1_fraction: float = 0.8, validation_fraction: float = 0.1):
+def load_fashion_mnist(batch_size :int, D1_fraction: float = 0.8, validation_fraction: float = 0.1, test_fraction: float = 0.1)\
+        -> typing.List[torch.utils.data.DataLoader]:
     """
     Loads the MNIST dataset and partitions it into two training sets D1, and D2 and a test set, and the respective
     train and validation set for both D1 and D2.
@@ -17,71 +18,72 @@ def load_mnist(batch_size :int, D1_fraction: float = 0.8, validation_fraction: f
     :param batch_size: int, batch size
     :param D1_fraction: float, fraction of dataset wich will be used to train autoencoder (unlabelled training)
     :param validation_fraction: float, fraction of training data which will be used for validation. Applies for both D1 and D2
-    :return: tuple of torch.utils.data.DataLoader, D1_train_dataloader, D1_val_dataloader, D2_train_dataloader, D2_val_dataloader, test_dataloader
+    :return: List of torch.utils.data.DataLoader, D1_train_dataloader, D2_train_dataloader, D2_val_dataloader, D2_test_dataloader
     """
+    # TODO resolve whether this returns list or tuple
 
+    fashion_mnist_mean = (0.5,)
+    fashion_mnist_std = (0.25,)
     transform_train = transforms.Compose([
         transforms.ToTensor(),
-        transforms.Normalize(mean, std)
+        transforms.Normalize(fashion_mnist_mean, fashion_mnist_std)
     ])
     transform_test = transforms.Compose([
         transforms.ToTensor(),
-        transforms.Normalize(mean, std)
+        transforms.Normalize(fashion_mnist_mean, fashion_mnist_std)
     ])
 
-    data_train = datasets.MNIST('data/MNIST',
-                              train=True,
-                              download=True,
-                              transforms=transform_train)
+    data_train = datasets.FashionMNIST('data',
+                                train=True,
+                                download=True,
+                                transform=transform_train)
 
-    data_test = datasets.MNIST('data/MNIST',
-                              train=False,
-                              download=True,
-                              transforms=transform_test)
+    data_test = datasets.FashionMNIST('data',
+                               train=False,
+                               download=True,
+                               transform=transform_test)
 
+    # Split dataset into D1 and D2
     indices = list(range(len(data_train)))
     d1_split_idx = int(np.floor(D1_fraction * len(data_train)))
     d1_indices = np.random.choice(indices, size=d1_split_idx, replace=False)
     d2_indices = list(set(indices) - set(d1_indices))
 
-    d1_val_split_idx = int(np.floor(validation_fraction * len(d1_indices)))
-    d1_val_indices = np.random.choice(d1_indices, size=d1_val_split_idx, replace=False)
-    d1_train_indices = list(set(d1_indices) - set(d1_val_indices))
-
+    # Split D2 into training, validation and test set
     d2_val_split_idx = int(np.floor(validation_fraction * len(d2_indices)))
+    d2_test_split_idx= int(np.floor(test_fraction * len(d2_indices)))
     d2_val_indices = np.random.choice(d2_indices, size=d2_val_split_idx, replace=False)
     d2_train_indices = list(set(d2_indices) - set(d2_val_indices))
+    d2_test_indices = np.random.choice(d2_train_indices, size=d2_test_split_idx, replace=False)
+    d2_train_indices = list(set(d2_train_indices) - set(d2_test_indices))
 
-    d1_train_sampler = SubsetRandomSampler(d1_train_indices)
-    d1_val_sampler = SubsetRandomSampler(d1_val_indices)
+    d1_train_sampler = SubsetRandomSampler(d1_indices)
     d2_train_sampler = SubsetRandomSampler(d2_train_indices)
     d2_val_sampler = SubsetRandomSampler(d2_val_indices)
+    d2_test_sampler = SubsetRandomSampler(d2_test_indices)
 
     d1_train_dataloader = torch.utils.data.DataLoader(data_train,
-                                           sampler= d1_train_sampler,
-                                           batch_size=batch_size,
-                                           drop_last=True)
-    d1_val_dataloader = torch.utils.data.DataLoader(data_train,
-                                         sampler=d1_val_sampler,
-                                         batch_size=batch_size,
-                                         drop_last=True)
+                                                      sampler= d1_train_sampler,
+                                                      batch_size=batch_size,
+                                                      drop_last=True)
     d2_train_dataloader = torch.utils.data.DataLoader(data_train,
-                                           sampler=d2_train_sampler,
-                                           batch_size=batch_size,
-                                           drop_last=True)
+                                                      sampler=d2_train_sampler,
+                                                      batch_size=batch_size,
+                                                      drop_last=True)
     d2_val_dataloader = torch.utils.data.DataLoader(data_train,
-                                         sampler=d2_val_sampler,
-                                         batch_size=batch_size,
-                                         drop_last=True)
-    test_dataloader = torch.utils.data.DataLoader(data_test,
-                                       batch_size=batch_size,
-                                       shuffle=False)
+                                                    sampler=d2_val_sampler,
+                                                    batch_size=batch_size,
+                                                    drop_last=True)
+    d2_test_dataloader = torch.utils.data.DataLoader(data_train,  # TODO Resolve quickfix. Check if its okay to use training data as test data and how this complies with the assignment
+                                                     sampler=d2_test_sampler,
+                                                     batch_size=batch_size,
+                                                     shuffle=False)
 
-    return d1_train_dataloader, d1_val_dataloader, d2_train_dataloader, d2_val_dataloader, test_dataloader
+    return d1_train_dataloader, d2_train_dataloader, d2_val_dataloader, d2_test_dataloader
 
 
 def load_cifar10(batch_size: int, validation_fraction: float = 0.1
-                 ): # TODO remove  #-> typing.List[torch.utils.data.DataLoader]:
+                 )-> typing.List[torch.utils.data.DataLoader]:
     # Note that transform train will apply the same transform for
     # validation!
     transform_train = transforms.Compose([

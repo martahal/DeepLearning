@@ -1,0 +1,45 @@
+from torch import nn
+
+class Decoder(nn.Module):
+
+    def __init__(self,
+                 input_size,
+                 encoder_last_layer_dim,
+                 output_size):
+        super().__init__()
+        self.input_size = input_size
+        self.encoder_last_layer_dim = encoder_last_layer_dim
+
+        self.channels,\
+        self.height, \
+        self.width = self.encoder_last_layer_dim
+
+        self.output_size = output_size
+
+        self.reconstructed_channels, \
+        self.reconstructed_height, \
+        self.reconstructed_width = self.output_size
+
+        self.model = nn.Sequential(
+            nn.Unflatten(self.input_size, self.encoder_last_layer_dim),
+            nn.ConvTranspose2d(in_channels=self.channels, out_channels=self.reconstructed_channels, stride=1, padding=1),
+            nn.ReLU(),
+            nn.Sigmoid() # scale reconstruction between 0 and 1
+        )
+
+    def forward(self, latent_vector):
+        """
+        Performs the forward pass of the decoder
+        :param latent_vector: tensor, The latent vector of the encoder, shape [batch size, latent vector size]
+        :return:
+        """
+        image = self.model(latent_vector)
+        self._test_correct_output(image)
+
+        return image
+
+    def _test_correct_output(self, output):
+        batch_size = output.shape[0]
+        expected_shape = (batch_size, self.output_size)
+        assert output.shape == (batch_size, self.output_size), \
+            f"Expected output of forward pass to be: {expected_shape}, but got: {output.shape}"
