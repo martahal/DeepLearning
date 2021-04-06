@@ -47,7 +47,7 @@ def plot_t_sne(model, visualisation_data):
     d = {'x': latent_vectors_embedded[:,0], 'y':latent_vectors_embedded[:,1], 'classes': classes}
     df = pd.DataFrame(data=d)
     sns.scatterplot(data = df, x = 'x', y = 'y', hue='classes', palette='deep')
-    plt.show()
+
 
 
 def main():

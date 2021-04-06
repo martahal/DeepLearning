@@ -21,8 +21,19 @@ class Decoder(nn.Module):
         self.reconstructed_width = self.output_size
 
         self.model = nn.Sequential(
-            nn.Unflatten(self.input_size, self.encoder_last_layer_dim),
-            nn.ConvTranspose2d(in_channels=self.channels, out_channels=self.reconstructed_channels, stride=1, padding=1),
+            nn.Linear(
+                in_features=input_size,
+                out_features=self.channels * self.height * self.width),
+            nn.Unflatten(
+                dim= 1,
+                unflattened_size=self.encoder_last_layer_dim),
+            nn.ConvTranspose2d(
+                in_channels=self.channels,
+                out_channels=self.reconstructed_channels,
+                kernel_size=(3,3),
+                stride=(1,1),
+                padding=(1,1)
+            ),
             nn.ReLU(),
             nn.Sigmoid() # scale reconstruction between 0 and 1
         )
@@ -34,7 +45,7 @@ class Decoder(nn.Module):
         :return:
         """
         image = self.model(latent_vector)
-        self._test_correct_output(image)
+        #self._test_correct_output(image)
 
         return image
 

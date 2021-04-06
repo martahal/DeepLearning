@@ -9,7 +9,7 @@ from Projects.Project3.Dataloader import load_fashion_mnist
 from Projects.Project3 import visualisations
 
 
-class SCN(nn.Module):
+class Classifier(nn.Module):
 
     def __init__(self,
                  encoder,
@@ -81,9 +81,9 @@ def main():
     input_size = (1,28,28) # TODO this should be detected on the fly when we determine which dataset to run
     latent_vector_size = 256
 
-    encoder = Encoder(input_size=input_size, num_filters=4, latent_vector_size=latent_vector_size)
+    encoder = Encoder(input_shape=input_size, num_filters=4, latent_vector_size=latent_vector_size)
     classifier_head = ClassifierHead(latent_vector_size, num_classes)
-    SCN_model = SCN(encoder, classifier_head, num_classes)
+    SCN_model = Classifier(encoder, classifier_head, num_classes)
 
     SCN_trainer = Trainer(batch_size=batch_size,
                           lr=learning_rate,

@@ -4,20 +4,20 @@ from torch import nn
 class Encoder(nn.Module):
 
     def __init__(self,
-                 input_size,
+                 input_shape,
                  num_filters,
                  latent_vector_size):
         """
         Constructs the encoder used in the SSN and SCN
-        :param input_size: tuple, (number of color channels of the image, image width, image height)
+        :param input_shape: tuple, (number of color channels of the image, image width, image height)
         :param latent_vector_size: int, length of latent vector
         """
         super().__init__()
 
-        self.input_channels = input_size[0]
+        self.input_channels = input_shape[0]
         self.num_filters = num_filters
         self.latent_vector_size = latent_vector_size
-        self.last_layer_features = self.num_filters * input_size[1] * input_size[2] # = num_filters * width * height * some constant depending on convolution process
+        self.last_layer_dim = (self.num_filters, input_shape[1], input_shape[2]) # = num_filters * width * height * some constant depending on convolution process
         self.model = nn.Sequential(
             #  [in: 1, out ___ , input spatial size: __x__, output spatial size: __x__ (same spatial output as input) ]
             nn.Conv2d(
@@ -29,7 +29,9 @@ class Encoder(nn.Module):
             ),
             nn.ReLU(),
             nn.Flatten(),
-            nn.Linear(in_features=self.last_layer_features, out_features=self.latent_vector_size))
+            nn.Linear(
+                in_features=self.last_layer_dim[0] * self.last_layer_dim[1] * self.last_layer_dim[2],
+                out_features=self.latent_vector_size))
 
     def forward(self, x):
        """
@@ -38,7 +40,7 @@ class Encoder(nn.Module):
        :return output: the latent vector of the encoder, shape [batch size, latent vector size]
        """
        x = self.model(x)
-       output =  x
+       output = x
 
        self._test_correct_output(output)
        return output

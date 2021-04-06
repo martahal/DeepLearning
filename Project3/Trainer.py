@@ -24,7 +24,10 @@ class Trainer:
         # Decide loss function
         if loss_function == 'cross_entropy':
             self.loss_function = torch.nn.CrossEntropyLoss()
+        elif loss_function == 'binary_cross_entropy':
+            self.loss_function = torch.nn.BCELoss()
         else:
+            # TODO
             raise NotImplementedError('This loss function is not implemented yet')
 
         # Print model to command line
@@ -69,19 +72,29 @@ class Trainer:
                 self.global_step += 1
 
             # Validate model for each epoch
-            val_loss, val_accuracy = self._validation(epoch)
+            val_loss, val_accuracy = self._validation(epoch, is_autoencoder=False)
             self.validation_history['loss'][self.global_step] = val_loss
             self.validation_history['accuracy'][self.global_step] = val_accuracy
         # Test model after all epochs
-        self.test_loss, self.test_accuracy = self._compute_loss_and_accuracy(self.d2_test_dataloader,
-                                                                   self.model,
-                                                                   self.loss_function)
+        self.test_loss, self.test_accuracy = self._calculate_loss_and_accuracy(self.d2_test_dataloader,
+                                                                               self.model,
+                                                                               self.loss_function)
         print(f'Test loss: {self.test_loss}',
               f'Test accuracy: {self.test_accuracy}',
               sep= ', ')
 
     def do_autoencoder_train(self):
-        pass
+        for epoch in range(self.epochs):
+            # must unpack both images and labels, but we do nothing with the labels
+            for images, labels in self.d1_train_dataloader: # dataset should be D1
+
+                train_loss = self._autoencoder_training_step(images)
+                self.train_history['loss'][self.global_step] = train_loss
+                self.global_step += 1
+            # Validate model for every epoch
+            val_loss = self._validation(epoch, is_autoencoder=True)
+            self.validation_history['loss'][self.global_step] = val_loss
+        # TODO Resolve whether to test or not
 
     def _classifier_training_step(self, X_batch, Y_batch):
         """
@@ -111,11 +124,36 @@ class Trainer:
 
         return train_loss, train_accuracy
 
-    def _validation(self, epoch):
+    def _autoencoder_training_step(self, images):
+        """
+        Performs the forward and backward pass of the incoming batch of images through the autoencoder
+        :param images: Batch of images
+        :return: Training loss
+        """
+        # Forward pass through autoencoder
+        reconstructed_images, aux = self.model(images)
+
+        # Calculating loss
+        train_loss = self.loss_function(reconstructed_images, images)
+
+        # Backward pass
+        train_loss.backward()
+        self.optimizer.step()
+
+        # Reset gradients
+        self.optimizer.zero_grad()
+
+        return train_loss
+
+
+    def _validation(self, epoch, is_autoencoder:bool):
         # Set module in evaluation mode
         self.model.eval()
-
-        loss, accuracy = self._compute_loss_and_accuracy(self.d2_val_dataloader, self.model, self.loss_function)
+        if not is_autoencoder:
+            loss, accuracy = self._calculate_loss_and_accuracy(self.d2_val_dataloader, self.model, self.loss_function)
+        else:
+            loss = self._calculate_autoencoder_loss(self.d2_val_dataloader, self.model, self.loss_function)
+            accuracy = 'N/A'
         print(f'Epoch: {epoch:>1}',
               f'Iteration: {self.global_step}',
               f'Validation loss: {loss}',
@@ -126,11 +164,11 @@ class Trainer:
 
         return loss, accuracy
 
-    def _compute_loss_and_accuracy(self,
-                                   dataloader: torch.utils.data.DataLoader,
-                                   model: torch.nn.Module,
-                                   loss_criterion: torch.nn.modules.loss._Loss
-                                   ):
+    def _calculate_loss_and_accuracy(self,
+                                     dataloader: torch.utils.data.DataLoader,
+                                     model: torch.nn.Module,
+                                     loss_criterion: torch.nn.modules.loss._Loss
+                                     ):
         average_loss = 0
         total_correct = 0
         total_images = 0
@@ -139,8 +177,9 @@ class Trainer:
                 # Forward pass the images through our model
                 output_probs, aux = model(X_batch) # produces a tuple for some reason. fix found here: https://github.com/pytorch/vision/issues/302#issuecomment-341163548
 
-                # Compute Loss and Accuracy
+                # Calculate Loss
                 average_loss += loss_criterion(output_probs, Y_batch)
+                # Calculate accuracy
                 predictions = torch.argmax(output_probs, dim=1)
                 total_correct += (predictions == Y_batch).sum().item()
                 total_images += predictions.shape[0]
@@ -149,3 +188,22 @@ class Trainer:
             accuracy = total_correct / total_images
 
         return round(average_loss.item(), 4), round(accuracy, 4)
+
+    def _calculate_autoencoder_loss(self,
+                                    dataloader: torch.utils.data.DataLoader,
+                                    model: torch.nn.Module,
+                                    loss_criterion: torch.nn.modules.loss._Loss
+                                    ):
+        average_loss = 0
+        with torch.no_grad():
+            # must unpack both images and labels, but we do nothing with the labels
+            for images, labels in dataloader:
+                # Forward pass images through the autoencoder to retrieve the reconstructed images
+                reconstructed_images, aux = model(images)
+
+                # Calculate loss
+                average_loss += loss_criterion(reconstructed_images, images)
+            average_loss /= len(dataloader)
+
+        return round(average_loss.item(), 4)
+
