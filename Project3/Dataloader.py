@@ -5,8 +5,7 @@ import typing
 import numpy as np
 np.random.seed(0)
 
-mean = (0.5, 0.5, 0.5)
-std = (.25, .25, .25)
+
 
 
 def load_fashion_mnist(batch_size :int, D1_fraction: float = 0.8, validation_fraction: float = 0.1, test_fraction: float = 0.1)\
@@ -43,6 +42,20 @@ def load_fashion_mnist(batch_size :int, D1_fraction: float = 0.8, validation_fra
                                download=True,
                                transform=transform_test)
 
+    d1_train_dataloader,\
+    d2_train_dataloader,\
+    d2_val_dataloader,\
+    d2_test_dataloader = split_dataset(
+        data_train,
+        data_test,
+        batch_size,
+        D1_fraction,
+        validation_fraction,
+        test_fraction
+    )
+    return d1_train_dataloader, d2_train_dataloader, d2_val_dataloader, d2_test_dataloader
+
+def split_dataset(data_train, data_test, batch_size, D1_fraction: float = 0.8, validation_fraction: float = 0.1, test_fraction: float = 0.1):
     # Split dataset into D1 and D2
     indices = list(range(len(data_train)))
     d1_split_idx = int(np.floor(D1_fraction * len(data_train)))
@@ -56,6 +69,9 @@ def load_fashion_mnist(batch_size :int, D1_fraction: float = 0.8, validation_fra
     d2_train_indices = list(set(d2_indices) - set(d2_val_indices))
     d2_test_indices = np.random.choice(d2_train_indices, size=d2_test_split_idx, replace=False)
     d2_train_indices = list(set(d2_train_indices) - set(d2_test_indices))
+
+    # quickfix to take test data from test data partition provided by torchvision.datasets
+    d2_test_indices = np.array([x for x in range(len(d2_test_indices))])
 
     d1_train_sampler = SubsetRandomSampler(d1_indices)
     d2_train_sampler = SubsetRandomSampler(d2_train_indices)
@@ -74,7 +90,7 @@ def load_fashion_mnist(batch_size :int, D1_fraction: float = 0.8, validation_fra
                                                     sampler=d2_val_sampler,
                                                     batch_size=batch_size,
                                                     drop_last=True)
-    d2_test_dataloader = torch.utils.data.DataLoader(data_train,  # TODO Resolve quickfix. Check if its okay to use training data as test data and how this complies with the assignment
+    d2_test_dataloader = torch.utils.data.DataLoader(data_test,  # TODO Resolve quickfix. Check if its okay to use training data as test data and how this complies with the assignment
                                                      sampler=d2_test_sampler,
                                                      batch_size=batch_size,
                                                      shuffle=False)
@@ -84,6 +100,8 @@ def load_fashion_mnist(batch_size :int, D1_fraction: float = 0.8, validation_fra
 
 def load_cifar10(batch_size: int, validation_fraction: float = 0.1
                  )-> typing.List[torch.utils.data.DataLoader]:
+    mean = (0.5, 0.5, 0.5)
+    std = (.25, .25, .25)
     # Note that transform train will apply the same transform for
     # validation!
     transform_train = transforms.Compose([

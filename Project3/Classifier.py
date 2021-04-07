@@ -67,7 +67,6 @@ def loss_and_accuracy_plots(trainer):
     plt.show()
 
 
-
 def main():
     epochs = 10
     batch_size = 16

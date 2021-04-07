@@ -4,12 +4,13 @@ from sklearn.manifold import TSNE
 import seaborn as sns
 import pandas as pd
 
-def plot_metric(metric_dict, label, averaged_plot=True, n=4):
+
+def plot_metric(metric_dict, label, averaged_plot=True, n=8):
     global_steps = list(metric_dict.keys())
     metric = list(metric_dict.values())
 
     if not averaged_plot:
-        plt.plot(global_steps, metric, label=label)
+        plt.plot(global_steps, np.array(metric), label=label)
     else:
         num_points = len(metric) // n
         mean_values = []
@@ -26,29 +27,42 @@ def plot_metric(metric_dict, label, averaged_plot=True, n=4):
         plt.plot(steps, mean_values, label=f'{label} averaged over {n} points')
         plt.fill_between(steps, mean_values - std_values,
                          mean_values + std_values,
-                         alpha=0.1, label= f'{label} variance over {n} points')
+                         alpha=0.3, label= f'{label} variance over {n} points')
 
-def plot_t_sne(model, visualisation_data):
-    """
-    Creates a t-SNE plot of the output of a model, by feeding the data to be visualised forward through the model
-    :param model: nn.Module, Will use the encoder of a semi supervised classifier. May be trained or not.
-    :param visualisation_data: The data to feed through the model and be visualised
 
-    """
-    latent_vectors = []
-    classes = []
-    for X_batch, Y_batch in visualisation_data:
-        latent_vectors_batch = model(X_batch)
-        latent_vectors.extend(latent_vectors_batch.detach().numpy())
-        classes.extend(Y_batch.detach().numpy())
+def show_images_and_reconstructions(images, reconstructions, labels):
+    # helper function
+    num_images = len(images)
+    def imshow(image):
+        # unnormalize image
+        image = image / 2 + 0.5
+        #convert from Tensor image
+        image = np.transpose(image, (1, 2, 0))
+        plt.imshow(image)
+
+    fig, axes = plt.subplots(nrows=2, ncols=num_images//2, sharex=True, sharey=True, figsize=(num_images + 4, 4))
+    for idx in np.arange(num_images):
+        ax = fig.add_subplot(2, num_images//2, idx+1, xticks=[], yticks= [])
+        imshow(reconstructions[idx])
+        ax.set_title(labels[idx])
+
+    fig, axes = plt.subplots(nrows=2, ncols=num_images//2, sharex=True, sharey=True, figsize=(num_images + 4, 4))
+    for idx in np.arange(num_images):
+        ax = fig.add_subplot(2, num_images//2, idx+1, xticks=[], yticks= [])
+        imshow(images[idx])
+        ax.set_title(labels[idx])
+
+
+
+def plot_t_sne(latent_vectors_and_classes: tuple):
+    latent_vectors = latent_vectors_and_classes[0]
+    classes = latent_vectors_and_classes[1]
     latent_vectors_embedded = TSNE().fit_transform(latent_vectors)
 
-    #create the 'data table' to show in the scatterplot
-    d = {'x': latent_vectors_embedded[:,0], 'y':latent_vectors_embedded[:,1], 'classes': classes}
+    # create the 'data table' to show in the scatterplot
+    d = {'x': latent_vectors_embedded[:, 0], 'y': latent_vectors_embedded[:, 1], 'classes': classes}
     df = pd.DataFrame(data=d)
-    sns.scatterplot(data = df, x = 'x', y = 'y', hue='classes', palette='deep')
-
-
+    sns.scatterplot(data=df, x='x', y='y', hue='classes', palette='deep')
 
 def main():
     values = np.random.uniform(0,2, 6000)
@@ -57,6 +71,7 @@ def main():
         test_dict[i] = values[i]
 
     plot_metric(test_dict, 'Test_plot')
+
 
 if __name__ == '__main__':
     main()

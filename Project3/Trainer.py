@@ -91,9 +91,11 @@ class Trainer:
                 train_loss = self._autoencoder_training_step(images)
                 self.train_history['loss'][self.global_step] = train_loss
                 self.global_step += 1
-            # Validate model for every epoch
-            val_loss = self._validation(epoch, is_autoencoder=True)
-            self.validation_history['loss'][self.global_step] = val_loss
+            # Validate model after 600 iterations
+                if self.global_step % 600 == 0:
+                    # accuracy is not used
+                    val_loss, accuracy = self._validation(epoch, is_autoencoder=True)
+                    self.validation_history['loss'][self.global_step] = val_loss
         # TODO Resolve whether to test or not
 
     def _classifier_training_step(self, X_batch, Y_batch):
@@ -149,11 +151,12 @@ class Trainer:
     def _validation(self, epoch, is_autoencoder:bool):
         # Set module in evaluation mode
         self.model.eval()
-        if not is_autoencoder:
-            loss, accuracy = self._calculate_loss_and_accuracy(self.d2_val_dataloader, self.model, self.loss_function)
-        else:
+        if is_autoencoder:
             loss = self._calculate_autoencoder_loss(self.d2_val_dataloader, self.model, self.loss_function)
             accuracy = 'N/A'
+        else:
+            loss, accuracy = self._calculate_loss_and_accuracy(self.d2_val_dataloader, self.model, self.loss_function)
+
         print(f'Epoch: {epoch:>1}',
               f'Iteration: {self.global_step}',
               f'Validation loss: {loss}',
