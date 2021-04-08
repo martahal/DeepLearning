@@ -65,10 +65,7 @@ def get_and_split_dataset(
     else:
         raise NotImplementedError('Dataset not implemented yet')
 
-    return dataloaders, image_dimensions,  num_classes # hidden_layer_dim,
-
-
-
+    return dataloaders, image_dimensions,  num_classes
 
 
 def run_SSN_training_regime(
@@ -124,7 +121,6 @@ def run_SSN_training_regime(
 
     classifier_head = ClassifierHead(latent_vector_size, num_classes)
 
-    # TODO Find best way to get sub-modules of modules i.e. get encoder module from autoencoder
     SSN_model = Classifier(Autoencoder_model.encoder, classifier_head, num_classes)
 
     if freeze_encoder_weights:
@@ -147,7 +143,6 @@ def run_SSN_training_regime(
     classifier_lv_and_c = get_latent_vector_and_classes(SSN_model.encoder, dataloaders[-1])
 
     if plot_t_sne:
-        # TODO Creating the figure works, but i suspect the encoders are all the same encoder getting updated
         create_t_sne_figure(untrained_lv_and_c, autoencoder_lv_and_c, classifier_lv_and_c)
 
     return SSN_trainer
@@ -226,7 +221,6 @@ def create_t_sne_figure(
         pretrained_latent_vectors_and_classes,
         classifier_latent_vectors_and_classes
 ):
-    # TODO Shuffle and evenly select ~ 250 data cases to use in t-SNE plot
 
     plt.figure(figsize=(20, 8))
     plt.subplot(1, 3, 1)
@@ -298,7 +292,7 @@ def main():
     # Parameters for classifier training
     classifier_learning_rate = 0.0002
     classifier_loss_function = 'cross_entropy'  # AVAILABLE 'cross_entropy'
-    classifier_optimizer = 'adam'#'SGD'  # AVAILABLE 'SGD' #
+    classifier_optimizer = 'SGD'  # AVAILABLE 'SGD' #'adam'
     classifier_epochs = 10
 
     dataloaders, \

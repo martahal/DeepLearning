@@ -19,7 +19,6 @@ def load_fashion_mnist(batch_size :int, D1_fraction: float = 0.8, validation_fra
     :param validation_fraction: float, fraction of training data which will be used for validation. Applies for both D1 and D2
     :return: List of torch.utils.data.DataLoader, D1_train_dataloader, D2_train_dataloader, D2_val_dataloader, D2_test_dataloader
     """
-    # TODO resolve whether this returns list or tuple
 
     fashion_mnist_mean = (0.5,)
     fashion_mnist_std = (0.25,)
