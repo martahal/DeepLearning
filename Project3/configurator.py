@@ -8,8 +8,11 @@ from Projects.Project3.Encoder import Encoder
 from Projects.Project3.Decoder import Decoder
 from Projects.Project3.ClassifierHead import ClassifierHead
 from Projects.Project3.Trainer import Trainer
-from Projects.Project3.Dataloader import load_fashion_mnist
+from Projects.Project3.Dataloader import load_fashion_mnist, load_mnist, load_cifar10, load_kmnist
 from Projects.Project3 import visualisations
+
+
+
 
 
 def get_and_split_dataset(
@@ -28,9 +31,37 @@ def get_and_split_dataset(
             test_fraction=D2_train_val_test_fraction[0]
         )
         image_dimensions = (1, 28, 28)
+    elif dataset_name == 'MNIST':
+        # Loading MNIST
+        num_classes = 10
+        image_dimensions = (1, 28, 28)
+        dataloaders = load_mnist(
+            batch_size=batch_size,
+            D1_fraction= D1_fraction,
+            validation_fraction=D2_train_val_test_fraction[0],
+            test_fraction=D2_train_val_test_fraction[1]
+        )
+    elif dataset_name == 'CIFAR10':
+        # Loading CIFAR10
+        num_classes = 10
+        image_dimensions = (3, 32, 32)
+        dataloaders = load_cifar10(
+            batch_size=batch_size,
+            D1_fraction=D1_fraction,
+            validation_fraction=D2_train_val_test_fraction[0],
+            test_fraction=D2_train_val_test_fraction[1]
+        )
+    elif dataset_name == 'KMNIST':
+        num_classes = 10
+        image_dimensions = (1, 28, 28)
+        dataloaders = load_kmnist(
+            batch_size=batch_size,
+            D1_fraction=D1_fraction,
+            validation_fraction=D2_train_val_test_fraction[0],
+            test_fraction=D2_train_val_test_fraction[1]
+        )
 
     else:
-        # TODO implement the other datasets
         raise NotImplementedError('Dataset not implemented yet')
 
     return dataloaders, image_dimensions, num_classes
@@ -61,7 +92,7 @@ def run_SSN_training_regime(
 ):
     encoder = Encoder(
         input_shape=image_dimensions,
-        num_filters=4,
+        num_filters=16,
         latent_vector_size=latent_vector_size)
     decoder = Decoder(
         input_size=latent_vector_size,
@@ -130,7 +161,7 @@ def run_SCN_training_regime(
         image_dimensions: tuple,
         num_classes: int
 ):
-    encoder = Encoder(input_shape=image_dimensions, num_filters=4, latent_vector_size=latent_vector_size)
+    encoder = Encoder(input_shape=image_dimensions, num_filters=16, latent_vector_size=latent_vector_size)
     classifier_head = ClassifierHead(latent_vector_size, num_classes)
     SCN_model = Classifier(encoder, classifier_head, num_classes)
 
@@ -159,7 +190,7 @@ def make_reconstructions_figure(autoencoder, vis_data, num_images, batch_size, i
         images.extend(X_batch)
         labels.extend(Y_batch)
         reconstruction_batch, aux = autoencoder(X_batch)
-        reconstruction_batch = reconstruction_batch.view(batch_size, image_dimensions[0], image_dimensions[1], image_dimensions[2]) # TODO may cause error
+        reconstruction_batch = reconstruction_batch.view(batch_size, image_dimensions[0], image_dimensions[1], image_dimensions[2])
         reconstruction_batch = reconstruction_batch.detach().numpy()
         reconstructions.extend(reconstruction_batch)
     images = images[:num_images]
@@ -240,7 +271,7 @@ def compare_SSN_and_SCN(SSN_trainer, SCN_trainer):
 
 def main():
     # Global parameters for both SSN and SCN
-    dataset_name = 'FashionMNIST'
+    dataset_name = 'KMNIST' #'CIFAR10'  # 'MNIST' #'FashionMNIST' #
     D1_fraction = 0.8
     D2_train_val_test_fraction = (0.1, 0.1)
 

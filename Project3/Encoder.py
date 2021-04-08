@@ -32,7 +32,8 @@ class Encoder(nn.Module):
             nn.Flatten(),
             nn.Linear(
                 in_features=self.last_layer_dim[0] * self.last_layer_dim[1] * self.last_layer_dim[2],
-                out_features=self.latent_vector_size))
+                out_features=self.latent_vector_size),
+        )
 
     def forward(self, x):
        """
