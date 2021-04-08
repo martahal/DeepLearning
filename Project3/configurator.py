@@ -12,9 +12,6 @@ from Projects.Project3.Dataloader import load_fashion_mnist, load_mnist, load_ci
 from Projects.Project3 import visualisations
 
 
-
-
-
 def get_and_split_dataset(
         dataset_name,
         D1_fraction: float,
@@ -31,10 +28,12 @@ def get_and_split_dataset(
             test_fraction=D2_train_val_test_fraction[0]
         )
         image_dimensions = (1, 28, 28)
+
     elif dataset_name == 'MNIST':
         # Loading MNIST
         num_classes = 10
         image_dimensions = (1, 28, 28)
+
         dataloaders = load_mnist(
             batch_size=batch_size,
             D1_fraction= D1_fraction,
@@ -44,7 +43,8 @@ def get_and_split_dataset(
     elif dataset_name == 'CIFAR10':
         # Loading CIFAR10
         num_classes = 10
-        image_dimensions = (3, 32, 32)
+        image_dimensions = (3, 28, 28)
+
         dataloaders = load_cifar10(
             batch_size=batch_size,
             D1_fraction=D1_fraction,
@@ -54,6 +54,7 @@ def get_and_split_dataset(
     elif dataset_name == 'KMNIST':
         num_classes = 10
         image_dimensions = (1, 28, 28)
+
         dataloaders = load_kmnist(
             batch_size=batch_size,
             D1_fraction=D1_fraction,
@@ -64,7 +65,7 @@ def get_and_split_dataset(
     else:
         raise NotImplementedError('Dataset not implemented yet')
 
-    return dataloaders, image_dimensions, num_classes
+    return dataloaders, image_dimensions,  num_classes # hidden_layer_dim,
 
 
 
@@ -93,10 +94,12 @@ def run_SSN_training_regime(
     encoder = Encoder(
         input_shape=image_dimensions,
         num_filters=16,
+        last_layer_dim=(32,10,10),
         latent_vector_size=latent_vector_size)
     decoder = Decoder(
         input_size=latent_vector_size,
         encoder_last_layer_dim=encoder.last_layer_dim,
+        hidden_filters=encoder.num_filters,
         output_size=image_dimensions)
     untrained_lv_and_c = get_latent_vector_and_classes(encoder, dataloaders[-1])
 
@@ -161,7 +164,11 @@ def run_SCN_training_regime(
         image_dimensions: tuple,
         num_classes: int
 ):
-    encoder = Encoder(input_shape=image_dimensions, num_filters=16, latent_vector_size=latent_vector_size)
+    encoder = Encoder(
+        input_shape=image_dimensions,
+        num_filters=16,
+        last_layer_dim=(32, 10, 10),
+        latent_vector_size=latent_vector_size)
     classifier_head = ClassifierHead(latent_vector_size, num_classes)
     SCN_model = Classifier(encoder, classifier_head, num_classes)
 
@@ -271,7 +278,7 @@ def compare_SSN_and_SCN(SSN_trainer, SCN_trainer):
 
 def main():
     # Global parameters for both SSN and SCN
-    dataset_name = 'KMNIST' #'CIFAR10'  # 'MNIST' #'FashionMNIST' #
+    dataset_name = 'MNIST'  # AVAILABLE  #'CIFAR10' # 'KMNIST' #'FashionMNIST' #
     D1_fraction = 0.8
     D2_train_val_test_fraction = (0.1, 0.1)
 
@@ -279,10 +286,10 @@ def main():
     batch_size = 16
 
     # Parameters for Autoencoder training
-    autoencoder_learning_rate = 0.02
-    autoencoder_loss_function = 'binary_cross_entropy'
-    autoencoder_optimizer = 'SGD'
-    autoencoder_epochs = 1
+    autoencoder_learning_rate = 0.2
+    autoencoder_loss_function = 'binary_cross_entropy'  # AVAILABLE 'binary_cross_entropy'
+    autoencoder_optimizer = 'SGD'  # AVAILABLE 'SGD' #'adam' #
+    autoencoder_epochs = 3
 
     freeze_encoder_weights = True
     plot_t_sne = True
@@ -290,8 +297,8 @@ def main():
 
     # Parameters for classifier training
     classifier_learning_rate = 0.0002
-    classifier_loss_function = 'cross_entropy'
-    classifier_optimizer = 'SGD'
+    classifier_loss_function = 'cross_entropy'  # AVAILABLE 'cross_entropy'
+    classifier_optimizer = 'adam'#'SGD'  # AVAILABLE 'SGD' #
     classifier_epochs = 10
 
     dataloaders, \
@@ -320,7 +327,7 @@ def main():
         n_reconstructions_to_display,
         plot_t_sne
     )
-    """
+
     SCN_trainer = run_SCN_training_regime(
         dataloaders,
         classifier_learning_rate,
@@ -333,7 +340,6 @@ def main():
         num_classes
     )
     compare_SSN_and_SCN(SSN_trainer, SCN_trainer)
-    """
 
 
 if __name__ == '__main__':

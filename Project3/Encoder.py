@@ -7,6 +7,7 @@ class Encoder(nn.Module):
     def __init__(self,
                  input_shape,
                  num_filters,
+                 last_layer_dim,
                  latent_vector_size):
         """
         Constructs the encoder used in the SSN and SCN
@@ -18,12 +19,20 @@ class Encoder(nn.Module):
         self.input_channels = input_shape[0]
         self.num_filters = num_filters
         self.latent_vector_size = latent_vector_size
-        self.last_layer_dim = (self.num_filters, input_shape[1], input_shape[2]) # = num_filters * width * height * some constant depending on convolution process
+        self.last_layer_dim = last_layer_dim
+        #self.last_layer_dim = (self.num_filters, input_shape[1], input_shape[2]) # = num_filters * width * height * some constant depending on convolution process
         self.model = nn.Sequential(
             #  [in: 1, out ___ , input spatial size: __x__, output spatial size: __x__ (same spatial output as input) ]
             nn.Conv2d(
                 in_channels=self.input_channels,
                 out_channels=self.num_filters,
+                kernel_size=(3,3),
+                stride=(3,3),
+                padding=(1,1)
+            ),
+            nn.Conv2d(
+                in_channels=self.num_filters,
+                out_channels=self.last_layer_dim[0],
                 kernel_size=(3,3),
                 stride=(1,1),
                 padding=(1,1)

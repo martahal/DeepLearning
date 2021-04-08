@@ -97,11 +97,13 @@ def load_cifar10(batch_size :int, D1_fraction: float = 0.8, validation_fraction:
     mean = (0.4914, 0.4822, 0.4465)
     std = (0.247, 0.243, 0.261)
     transform_train = transforms.Compose([
+        transforms.CenterCrop(28),
         transforms.ToTensor(),
         transforms.Normalize(mean, std),
         #transforms.RandomAffine(degrees=15, scale=(0.5,2))
     ])
     transform_test = transforms.Compose([
+        transforms.CenterCrop(28),
         transforms.ToTensor(),
         transforms.Normalize(mean, std)
     ])

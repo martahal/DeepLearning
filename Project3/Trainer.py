@@ -26,6 +26,8 @@ class Trainer:
             self.loss_function = torch.nn.CrossEntropyLoss()
         elif loss_function == 'binary_cross_entropy':
             self.loss_function = torch.nn.BCELoss()
+        elif loss_function == 'MSE':
+            self.loss_function = torch.nn.MSE()
         else:
             # TODO
             raise NotImplementedError('This loss function is not implemented yet')
