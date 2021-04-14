@@ -4,11 +4,11 @@ from Projects.Project3.utils import get_and_split_dataset, compare_SSN_and_SCN
 
 def main():
     # Global parameters for both SSN and SCN
-    dataset_name = 'MNIST'  # AVAILABLE  #'CIFAR10' # 'KMNIST' #'FashionMNIST' #
+    dataset_name ='MNIST' #'KMNIST' #'FashionMNIST' # AVAILABLE  # 'CIFAR10' #
     D1_fraction = 0.8
     D2_train_val_test_fraction = (0.1, 0.1)
 
-    latent_vector_size = 64
+    latent_vector_size = 64 # recommended for MNIST between 16 and 64
     batch_size = 16
 
     # Parameters for Autoencoder training
@@ -22,9 +22,9 @@ def main():
     n_reconstructions_to_display = 10
 
     # Parameters for classifier training
-    classifier_learning_rate = 0.002
+    classifier_learning_rate = 0.0002
     classifier_loss_function = 'cross_entropy'  # AVAILABLE 'cross_entropy'
-    classifier_optimizer = 'SGD'  # AVAILABLE 'SGD' #'adam'
+    classifier_optimizer = 'SGD'  # AVAILABLE 'SGD' # 'adam'#
     classifier_epochs = 10
 
     dataloaders, \
@@ -54,7 +54,7 @@ def main():
         plot_t_sne
     )
 
-    #SSN_approach.run_SSN_training_regime()
+    SSN_approach.run_SSN_training_routine()
 
     SCN_approach = SCN(
         dataloaders,
@@ -68,9 +68,9 @@ def main():
         num_classes
     )
 
-    SCN_approach.run_SCN_training_regime()
+    SCN_approach.run_SCN_training_routine()
 
-    #compare_SSN_and_SCN(SSN_approach.SSN_trainer, SCN_approach.SCN_trainer)
+    compare_SSN_and_SCN(SSN_approach.SSN_trainer, SCN_approach.SCN_trainer)
 
 if __name__ == '__main__':
     main()

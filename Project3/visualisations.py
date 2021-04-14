@@ -62,7 +62,7 @@ def show_images_and_reconstructions(images, reconstructions, labels):
 def plot_t_sne(latent_vectors_and_classes: tuple):
     latent_vectors = latent_vectors_and_classes[0]
     classes = latent_vectors_and_classes[1]
-    latent_vectors_embedded = TSNE().fit_transform(latent_vectors)
+    latent_vectors_embedded = TSNE(perplexity=50, learning_rate=100).fit_transform(latent_vectors)
 
     # create the 'data table' to show in the scatterplot
     d = {'x': latent_vectors_embedded[:, 0], 'y': latent_vectors_embedded[:, 1], 'classes': classes}

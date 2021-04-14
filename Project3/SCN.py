@@ -49,6 +49,6 @@ class SCN:
             loss_function=loss_function,
             optimizer=optimizer)
 
-    def run_SCN_training_regime(self):
+    def run_SCN_training_routine(self):
         self.SCN_trainer.do_classifier_train()
         #return self.SCN_trainer

@@ -1,0 +1,23 @@
+    # Global parameters for both SSN and SCN
+    dataset_name ='MNIST' #'KMNIST' #'FashionMNIST' # AVAILABLE  # 'CIFAR10' #
+    D1_fraction = 0.8
+    D2_train_val_test_fraction = (0.1, 0.1)
+
+    latent_vector_size = 64 # recommended for MNIST between 16 and 64
+    batch_size = 16
+
+    # Parameters for Autoencoder training
+    autoencoder_learning_rate = 0.2
+    autoencoder_loss_function = 'binary_cross_entropy'  # AVAILABLE 'binary_cross_entropy'
+    autoencoder_optimizer = 'SGD'  # AVAILABLE 'SGD' #'adam' #
+    autoencoder_epochs = 3 # Optimal for MNIST: 3
+
+    freeze_encoder_weights = False
+    plot_t_sne = True
+    n_reconstructions_to_display = 10
+
+    # Parameters for classifier training
+    classifier_learning_rate = 0.002
+    classifier_loss_function = 'cross_entropy'  # AVAILABLE 'cross_entropy'
+    classifier_optimizer = 'adam'#'SGD'  # AVAILABLE 'SGD' # 'adam'#
+    classifier_epochs = 10

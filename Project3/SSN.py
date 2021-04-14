@@ -79,7 +79,8 @@ class SSN:
             loss_function=classifier_loss_function,
             optimizer=classifier_optimizer)
 
-    def run_SSN_training_regime(self):
+    def run_SSN_training_routine(self):
+
         untrained_lv_and_c = self.get_latent_vector_and_classes(self.encoder, self.dataloaders[-1])
 
         self.autoencoder_trainer.do_autoencoder_train()
@@ -99,10 +100,6 @@ class SSN:
         if self.freeze_encoder_weights:
             for parameter in self.classifier.encoder.parameters():
                 parameter.requires_grad = False
-            # TODO find best practice for freezing encoder weights
-            # SSN_model.encoder.freeze_weights()
-            # or something like this but using the proper way to do this according to pytorch API
-            pass
 
         self.SSN_trainer.do_classifier_train()
         classifier_lv_and_c = self.get_latent_vector_and_classes(self.classifier.encoder, self.dataloaders[-1])
@@ -124,8 +121,8 @@ class SSN:
             latent_vectors_batch = encoder(X_batch)
             latent_vectors.extend(latent_vectors_batch.detach().numpy())
             classes.extend(Y_batch.detach().numpy())
-        #returns only the first 250 latent vectors
-        return latent_vectors[:250], classes[:250]
+
+        return latent_vectors, classes
 
     @staticmethod
     def make_reconstructions_figure(autoencoder, vis_data, num_images, batch_size, image_dimensions):
