@@ -1,5 +1,6 @@
 import torch
 import collections
+import numpy as np
 
 class Trainer:
 
@@ -26,8 +27,6 @@ class Trainer:
             self.loss_function = torch.nn.CrossEntropyLoss()
         elif loss_function == 'binary_cross_entropy':
             self.loss_function = torch.nn.BCELoss()
-        elif loss_function == 'MSE':
-            self.loss_function = torch.nn.MSE()
         else:
             # TODO
             raise NotImplementedError('This loss function is not implemented yet')
@@ -65,7 +64,7 @@ class Trainer:
         self.global_step = 0
 
     def do_classifier_train(self, freeze_encoder_weights=False):
-
+        print('\nCLASSIFIER TRAINING\n')
         for epoch in range(self.epochs):
             for X_batch, Y_batch in self.d2_train_dataloader:
                 train_loss, train_accuracy = self._classifier_training_step(X_batch, Y_batch)
@@ -86,6 +85,7 @@ class Trainer:
               sep= ', ')
 
     def do_autoencoder_train(self):
+        print('\nAUTOENCODER TRAINING\n')
         for epoch in range(self.epochs):
             # must unpack both images and labels, but we do nothing with the labels
             for images, labels in self.d1_train_dataloader: # dataset should be D1
