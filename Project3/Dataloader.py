@@ -5,8 +5,7 @@ import typing
 import numpy as np
 np.random.seed(0)
 
-mean = (0.5, 0.5, 0.5)
-std = (.25, .25, .25)
+
 
 
 def load_fashion_mnist(batch_size :int, D1_fraction: float = 0.8, validation_fraction: float = 0.1, test_fraction: float = 0.1)\
@@ -20,7 +19,6 @@ def load_fashion_mnist(batch_size :int, D1_fraction: float = 0.8, validation_fra
     :param validation_fraction: float, fraction of training data which will be used for validation. Applies for both D1 and D2
     :return: List of torch.utils.data.DataLoader, D1_train_dataloader, D2_train_dataloader, D2_val_dataloader, D2_test_dataloader
     """
-    # TODO resolve whether this returns list or tuple
 
     fashion_mnist_mean = (0.5,)
     fashion_mnist_std = (0.25,)
@@ -43,9 +41,133 @@ def load_fashion_mnist(batch_size :int, D1_fraction: float = 0.8, validation_fra
                                download=True,
                                transform=transform_test)
 
+    d1_train_dataloader,\
+    d2_train_dataloader,\
+    d2_val_dataloader,\
+    d2_test_dataloader = split_dataset(
+        data_train,
+        data_test,
+        batch_size,
+        D1_fraction,
+        validation_fraction,
+        test_fraction
+    )
+    return d1_train_dataloader, d2_train_dataloader, d2_val_dataloader, d2_test_dataloader
+
+
+def load_mnist(batch_size :int, D1_fraction: float = 0.8, validation_fraction: float = 0.1, test_fraction: float = 0.1)\
+        -> typing.List[torch.utils.data.DataLoader]:
+    mnist_mean = (0.5,)
+    mnist_std = (0.25,)
+    transform_train = transforms.Compose([
+        transforms.ToTensor(),
+        transforms.Normalize(mnist_mean, mnist_std)
+    ])
+    transform_test = transforms.Compose([
+        transforms.ToTensor(),
+        transforms.Normalize(mnist_mean, mnist_std)
+    ])
+    data_train = datasets.MNIST('data',
+                                train=True,
+                                download=True,
+                                transform=transform_train)
+
+    data_test = datasets.MNIST('data',
+                               train=False,
+                               download=True,
+                               transform=transform_test)
+
+    d1_train_dataloader,\
+    d2_train_dataloader,\
+    d2_val_dataloader,\
+    d2_test_dataloader = split_dataset(
+        data_train,
+        data_test,
+        batch_size,
+        D1_fraction,
+        validation_fraction,
+        test_fraction
+    )
+    return d1_train_dataloader, d2_train_dataloader, d2_val_dataloader, d2_test_dataloader
+
+
+def load_cifar10(batch_size :int, D1_fraction: float = 0.8, validation_fraction: float = 0.1, test_fraction: float = 0.1)\
+        -> typing.List[torch.utils.data.DataLoader]:
+    mean = (0.4914, 0.4822, 0.4465)
+    std = (0.247, 0.243, 0.261)
+    transform_train = transforms.Compose([
+        transforms.CenterCrop(28),
+        transforms.ToTensor(),
+        transforms.Normalize(mean, std),
+        #transforms.RandomAffine(degrees=15, scale=(0.5,2))
+    ])
+    transform_test = transforms.Compose([
+        transforms.CenterCrop(28),
+        transforms.ToTensor(),
+        transforms.Normalize(mean, std)
+    ])
+    data_train = datasets.CIFAR10('data/cifar10',
+                                  train=True,
+                                  download=True,
+                                  transform=transform_train)
+
+    data_test = datasets.CIFAR10('data/cifar10',
+                                 train=False,
+                                 download=True,
+                                 transform=transform_test)
+    d1_train_dataloader, \
+    d2_train_dataloader, \
+    d2_val_dataloader, \
+    d2_test_dataloader = split_dataset(
+        data_train,
+        data_test,
+        batch_size,
+        D1_fraction,
+        validation_fraction,
+        test_fraction
+    )
+    return d1_train_dataloader, d2_train_dataloader, d2_val_dataloader, d2_test_dataloader
+
+def load_kmnist(batch_size :int, D1_fraction: float = 0.8, validation_fraction: float = 0.1, test_fraction: float = 0.1)\
+        -> typing.List[torch.utils.data.DataLoader]:
+    kmnist_mean = (0.5,)
+    kmnist_std = (0.25,)
+    transform_train = transforms.Compose([
+        transforms.ToTensor(),
+        transforms.Normalize(kmnist_mean, kmnist_std)
+    ])
+    transform_test = transforms.Compose([
+        transforms.ToTensor(),
+        transforms.Normalize(kmnist_mean, kmnist_std)
+    ])
+    data_train = datasets.KMNIST('data',
+                                train=True,
+                                download=True,
+                                transform=transform_train)
+
+    data_test = datasets.KMNIST('data',
+                               train=False,
+                               download=True,
+                               transform=transform_test)
+
+    d1_train_dataloader, \
+    d2_train_dataloader, \
+    d2_val_dataloader, \
+    d2_test_dataloader = split_dataset(
+        data_train,
+        data_test,
+        batch_size,
+        D1_fraction,
+        validation_fraction,
+        test_fraction
+    )
+    return d1_train_dataloader, d2_train_dataloader, d2_val_dataloader, d2_test_dataloader
+
+def split_dataset(data_train, data_test, batch_size, D1_fraction: float = 0.8, validation_fraction: float = 0.1, test_fraction: float = 0.1):
     # Split dataset into D1 and D2
     indices = list(range(len(data_train)))
-    d1_split_idx = int(np.floor(D1_fraction * len(data_train)))
+    #indices = np.random.choice(indices, size = int(len(data_train) * 0.7))
+    d1_split_idx = int(np.floor(D1_fraction * len(indices)))
     d1_indices = np.random.choice(indices, size=d1_split_idx, replace=False)
     d2_indices = list(set(indices) - set(d1_indices))
 
@@ -56,6 +178,9 @@ def load_fashion_mnist(batch_size :int, D1_fraction: float = 0.8, validation_fra
     d2_train_indices = list(set(d2_indices) - set(d2_val_indices))
     d2_test_indices = np.random.choice(d2_train_indices, size=d2_test_split_idx, replace=False)
     d2_train_indices = list(set(d2_train_indices) - set(d2_test_indices))
+
+    # quickfix to take test data from test data partition provided by torchvision.datasets
+    d2_test_indices = np.array([x for x in range(len(d2_test_indices))])
 
     d1_train_sampler = SubsetRandomSampler(d1_indices)
     d2_train_sampler = SubsetRandomSampler(d2_train_indices)
@@ -74,7 +199,7 @@ def load_fashion_mnist(batch_size :int, D1_fraction: float = 0.8, validation_fra
                                                     sampler=d2_val_sampler,
                                                     batch_size=batch_size,
                                                     drop_last=True)
-    d2_test_dataloader = torch.utils.data.DataLoader(data_train,  # TODO Resolve quickfix. Check if its okay to use training data as test data and how this complies with the assignment
+    d2_test_dataloader = torch.utils.data.DataLoader(data_test,
                                                      sampler=d2_test_sampler,
                                                      batch_size=batch_size,
                                                      shuffle=False)
@@ -82,52 +207,6 @@ def load_fashion_mnist(batch_size :int, D1_fraction: float = 0.8, validation_fra
     return d1_train_dataloader, d2_train_dataloader, d2_val_dataloader, d2_test_dataloader
 
 
-def load_cifar10(batch_size: int, validation_fraction: float = 0.1
-                 )-> typing.List[torch.utils.data.DataLoader]:
-    # Note that transform train will apply the same transform for
-    # validation!
-    transform_train = transforms.Compose([
-        transforms.ToTensor(),
-        transforms.Normalize(mean, std),
-        #transforms.RandomAffine(degrees=15, scale=(0.5,2))
-    ])
-    transform_test = transforms.Compose([
-        transforms.ToTensor(),
-        transforms.Normalize(mean, std)
-    ])
-    data_train = datasets.CIFAR10('data/cifar10',
-                                  train=True,
-                                  download=True,
-                                  transform=transform_train)
 
-    data_test = datasets.CIFAR10('data/cifar10',
-                                 train=False,
-                                 download=True,
-                                 transform=transform_test)
 
-    indices = list(range(len(data_train)))
-    split_idx = int(np.floor(validation_fraction * len(data_train)))
 
-    val_indices = np.random.choice(indices, size=split_idx, replace=False)
-    train_indices = list(set(indices) - set(val_indices))
-
-    train_sampler = SubsetRandomSampler(train_indices)
-    validation_sampler = SubsetRandomSampler(val_indices)
-
-    dataloader_train = torch.utils.data.DataLoader(data_train,
-                                                   sampler=train_sampler,
-                                                   batch_size=batch_size,
-                                                   num_workers=2,
-                                                   drop_last=True)
-
-    dataloader_val = torch.utils.data.DataLoader(data_train,
-                                                 sampler=validation_sampler,
-                                                 batch_size=batch_size,
-                                                 num_workers=2)
-
-    dataloader_test = torch.utils.data.DataLoader(data_test,
-                                                  batch_size=batch_size,
-                                                  shuffle=False,
-                                                  num_workers=2)
-
-    return dataloader_train, dataloader_val, dataloader_test
