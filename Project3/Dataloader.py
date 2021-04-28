@@ -166,7 +166,8 @@ def load_kmnist(batch_size :int, D1_fraction: float = 0.8, validation_fraction: 
 def split_dataset(data_train, data_test, batch_size, D1_fraction: float = 0.8, validation_fraction: float = 0.1, test_fraction: float = 0.1):
     # Split dataset into D1 and D2
     indices = list(range(len(data_train)))
-    d1_split_idx = int(np.floor(D1_fraction * len(data_train)))
+    #indices = np.random.choice(indices, size = int(len(data_train) * 0.7))
+    d1_split_idx = int(np.floor(D1_fraction * len(indices)))
     d1_indices = np.random.choice(indices, size=d1_split_idx, replace=False)
     d2_indices = list(set(indices) - set(d1_indices))
 
