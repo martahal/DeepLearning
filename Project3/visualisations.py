@@ -48,14 +48,14 @@ def show_images_and_reconstructions(images, reconstructions, labels):
     for idx in np.arange(num_images):
         ax = fig.add_subplot(2, int(np.ceil(num_images/2)), idx+1, xticks=[], yticks= [], frame_on= False)
         imshow(reconstructions[idx])
-        #ax.set_title(labels[idx])
+        ax.set_title(labels[idx])
 
     fig, axes = plt.subplots(nrows=2, ncols=int(np.ceil(num_images/2)), figsize=(num_images, 4))#, sharex=True, sharey=True)#, figsize=(num_images + 4, 4))
     fig.tight_layout()
     for idx in np.arange(num_images):
         ax = fig.add_subplot(2, int(np.ceil(num_images/2)), idx+1, xticks=[], yticks= [], frame_on= False)
         imshow(images[idx])
-        #ax.set_title(labels[idx])
+        ax.set_title(labels[idx])
 
 
 

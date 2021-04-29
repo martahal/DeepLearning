@@ -3,8 +3,10 @@ from Projects.Project3.Encoder import Encoder
 from Projects.Project3.Decoder import Decoder
 from Projects.Project4.Trainer import Trainer
 from Projects.Project4.stacked_mnist import StackedMNISTData, DataMode
+from Projects.Project4.utils import make_reconstructions_figure
 
 import matplotlib.pyplot as plt
+import torch
 from torch import nn
 
 class Generative_autoencoder:
@@ -20,14 +22,14 @@ class Generative_autoencoder:
 
             latent_vector_size: int,
             batch_size: int,
-            training_data_size: int,
             num_samples: int,
 
 
     ):
-        self.data = data
+        self.data = self._get_data_subsample(data, batch_size)
         self.image_dimensions = (data.test_images.shape[-1], data.test_images.shape[-2], data.test_images.shape[-3])
         self.num_samples = num_samples
+        self.batch_size = batch_size
 
 
 
@@ -48,7 +50,6 @@ class Generative_autoencoder:
         self.autoencoder_trainer = Trainer(
             batch_size=batch_size,
             lr=autoencoder_learning_rate,
-            training_data_size= training_data_size,
             epochs=autoencoder_epochs,
             model=self.autoencoder,
             data=self.data,
@@ -58,6 +59,14 @@ class Generative_autoencoder:
     def train_autoencoder(self):
 
         self.autoencoder_trainer.do_autoencoder_train()
+        #select a sample of the test data we like to visualize
+        visualisation_data = self.data[1][:9]
+        make_reconstructions_figure(
+            self.autoencoder,
+            visualisation_data,
+            num_images=9,
+            batch_size=self.batch_size,
+            image_dimensions=self.image_dimensions)
 
         #z_sample = self.get_latent_vector_and_classes(self.autoencoder.encoder,self.num_samples, self.dataloaders)
 
@@ -72,20 +81,34 @@ class Generative_autoencoder:
         """
         pass
 
+    @staticmethod
+    def _get_data_subsample(data, batch_size):
+        train_data_subsample, test_data = [], []
+        for (images, classes) in data.batch_generator(training=True, batch_size=batch_size):
+            images, classes = torch.from_numpy(images).float(), torch.from_numpy(classes).float()
+            images = images.permute(0, 3, 1, 2)  # change axis from NHWC to NCHW
+            batch = (images, classes)
+            train_data_subsample.append(batch)
+
+        for (images, classes) in data.batch_generator(training=False, batch_size=batch_size):
+            images, classes = torch.from_numpy(images).float(), torch.from_numpy(classes).float()
+            images = images.permute(0, 3, 1, 2)  # change axis from NHWC to NCHW
+            batch = (images, classes)
+            test_data.append(batch)
+        return (train_data_subsample, test_data)
 
 def main():
-    batch_size = 256
-    data_object = StackedMNISTData(mode=DataMode.MONO_BINARY_COMPLETE, default_batch_size=batch_size)
-    training_data_size = 20000
+    batch_size = 16
+    data_object = StackedMNISTData(mode=DataMode.COLOR_BINARY_COMPLETE, default_batch_size=batch_size)
     #Produce a subsample of the training set that we actually like to train with instead of the whole of mnist
     #TODO consider to move this elsewhere as it might be applicable to other stuff
 
 
 
     autoencoder_learning_rate = 0.2
-    autoencoder_loss_function = 'binary_cross_entropy'  # AVAILABLE 'binary_cross_entropy'
+    autoencoder_loss_function = 'binary_cross_entropy'  # AVAILABLE 'binary_cross_entropy''MSE' #
     autoencoder_optimizer = 'SGD'  # AVAILABLE 'SGD' #'adam' #
-    autoencoder_epochs = 3  # Optimal for MNIST: 3
+    autoencoder_epochs = 1  # Optimal for MNIST: 3
 
     num_samples = 10
     latent_vector_size = 64  # recommended for MNIST between 16 and 64
@@ -99,7 +122,6 @@ def main():
 
         latent_vector_size,
         batch_size,
-        training_data_size,
         num_samples,
     )
     gen_autoencoder.train_autoencoder()

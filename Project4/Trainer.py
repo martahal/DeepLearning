@@ -8,7 +8,6 @@ class Trainer:
     def __init__(self,
                  batch_size,
                  lr,
-                 training_data_size,
                  epochs,
                  model,
                  data,
@@ -22,13 +21,15 @@ class Trainer:
         self.lr = lr
         self. epochs = epochs
         self.model = model
-        self.data = data
+        (self.training_data, self.test_data) = data
 
         # Decide loss function
         if loss_function == 'cross_entropy':
             self.loss_function = torch.nn.CrossEntropyLoss()
         elif loss_function == 'binary_cross_entropy':
             self.loss_function = torch.nn.BCELoss()
+        elif loss_function == 'MSE':
+            self.loss_function = torch.nn.MSELoss()
         else:
             # TODO
             raise NotImplementedError('This loss function is not implemented yet')
@@ -46,12 +47,8 @@ class Trainer:
         else:
             raise NotImplementedError('Optimizer not implemented')
 
-        # Load dataset:
-        #self.training_data_size = training_data_size  # number of training examples in the trainig dataset
-#
-        #self.training_data = self._get_data_subsample(data, training_data_size, batch_size)
-        ##TODO consider to subsample testdataset too
-        #self.test_data = (data.test_images, data.test_labels)
+
+
 
 
         # Tracking variables
@@ -91,19 +88,14 @@ class Trainer:
         print('\nAUTOENCODER TRAINING\n')
         for epoch in range(self.epochs):
             # must unpack both images and labels, but we do nothing with the labels
-            #for images, labels in self.d1_train_dataloader: # dataset should be D1
-            for (images, classes) in self.data.batch_generator(training=True, batch_size=self.batch_size):
-                images, classes = torch.from_numpy(images).float(), torch.from_numpy(classes).float() # to tensors
-                images = images.permute(0,3,1,2) # change axis from NHWC to NCHW
+            for (images, classes) in self.training_data:
                 train_loss = self._autoencoder_training_step(images)
                 self.train_history['loss'][self.global_step] = train_loss
                 self.global_step += 1
-                # Validate model after 600 iterations
                 if self.global_step % 600 == 0:
-                    # accuracy is not used
+                    # Validate model after every 600 iteration
                     val_loss, accuracy = self._validation(epoch, is_autoencoder=True)
                     self.validation_history['loss'][self.global_step] = val_loss
-        # TODO Resolve whether to test or not
 
     def _classifier_training_step(self, X_batch, Y_batch):
         """
@@ -160,7 +152,7 @@ class Trainer:
         self.model.eval()
         if is_autoencoder:
             #loss = self._calculate_autoencoder_loss(self.d2_val_dataloader, self.model, self.loss_function)
-            loss = self._calculate_autoencoder_loss(self.data, self.model, self.loss_function)
+            loss = self._calculate_autoencoder_loss(self.test_data, self.model, self.loss_function)
             accuracy = 'N/A'
         else:
             loss, accuracy = self._calculate_loss_and_accuracy(self.d2_val_dataloader, self.model, self.loss_function)
@@ -210,24 +202,17 @@ class Trainer:
         with torch.no_grad():
             # must unpack both images and labels, but we do nothing with the labels
             #for images, labels in dataloader:
-            for (images, classes) in data.batch_generator(training=False, batch_size=self.batch_size):
-                images, classes = torch.from_numpy(images).float(), torch.from_numpy(classes).float()  # to tensors
-                images = images.permute(0, 3, 1, 2)  # change axis from NHWC to NCHW
+            for (images, classes) in self.test_data:
+                #images, classes = torch.from_numpy(images).float(), torch.from_numpy(classes).float()  # to tensors
+                #images = images.permute(0, 3, 1, 2)  # change axis from NHWC to NCHW
                 # Forward pass images through the autoencoder to retrieve the reconstructed images
                 reconstructed_images, aux = model(images)
 
                 # Calculate loss
                 average_loss += loss_criterion(reconstructed_images, images) # TODO change this to the other way around (images, reconstructions)
-            average_loss /= data.test_images.shape[0]
+            average_loss /= len(self.test_data) * len(self.test_data[0])
 
         return round(average_loss.item(), 4)
-    @staticmethod
-    def _get_data_subsample(data, training_data_size, batch_size):
-        data_subsample = []
-        for i in range(training_data_size//batch_size):
-            (images, classes) = data.batch_generator(training=True, batch_size=batch_size)
-            batch = (torch.from_numpy(images), torch.from_numpy(classes))
-            data_subsample.append(batch)
-        return data_subsample
+
 
 
