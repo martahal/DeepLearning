@@ -4,7 +4,7 @@ from Projects.Project3.utils import get_and_split_dataset, compare_SSN_and_SCN
 
 def main():
     # Global parameters for both SSN and SCN
-    dataset_name ='CIFAR10' # 'FashionMNIST' #'KMNIST' # # AVAILABLE  # 'MNIST' #
+    dataset_name ='MNIST' #'CIFAR10' # 'FashionMNIST' #'KMNIST' # # AVAILABLE  #
     D1_fraction = 0.8
     D2_train_val_test_fraction = (0.1, 0.1)
 
@@ -24,7 +24,7 @@ def main():
     # Parameters for classifier training
     classifier_learning_rate = 0.0002
     classifier_loss_function = 'cross_entropy'  # AVAILABLE 'cross_entropy'
-    classifier_optimizer ='adam'# 'SGD'  # AVAILABLE 'SGD' #
+    classifier_optimizer ='SGD'  # 'adam'# AVAILABLE 'SGD' #
     classifier_epochs = 10
 
     dataloaders, \
