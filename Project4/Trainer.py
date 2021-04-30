@@ -1,6 +1,8 @@
 import torch
 import collections
-
+from Project3.visualisations import show_images_and_reconstructions
+import matplotlib.pyplot as plt
+from Project4.utils import to_cuda
 
 class Trainer:
 
@@ -20,6 +22,8 @@ class Trainer:
         self.lr = lr
         self. epochs = epochs
         self.model = model
+        #Transfer model to GPU VRAM if possible
+        self.model = to_cuda(self.model)
         (self.training_data, self.test_data) = data
 
         # Decide loss function
@@ -88,13 +92,14 @@ class Trainer:
         for epoch in range(self.epochs):
             # must unpack both images and labels, but we do nothing with the labels
             for (images, classes) in self.training_data:
-                train_loss = self._autoencoder_training_step(images)
+                train_loss = self._autoencoder_training_step(images, classes)
                 self.train_history['loss'][self.global_step] = train_loss
                 self.global_step += 1
                 if self.global_step % 600 == 0:
                     # Validate model after every 600 iteration
                     val_loss, accuracy = self._validation(epoch, is_autoencoder=True)
                     self.validation_history['loss'][self.global_step] = val_loss
+            #TODO Save model to save time
 
     def _classifier_training_step(self, X_batch, Y_batch):
         """
@@ -124,17 +129,22 @@ class Trainer:
 
         return train_loss, train_accuracy
 
-    def _autoencoder_training_step(self, images):
+    def _autoencoder_training_step(self, images, classes):
         """
         Performs the forward and backward pass of the incoming batch of images through the autoencoder
         :param images: Batch of images
         :return: Training loss
         """
+        #Transfer data to GPU VRAM if possible
+        images = to_cuda(images)
         # Forward pass through autoencoder
         reconstructed_images, aux = self.model(images)
 
         # Calculating loss
-        train_loss = self.loss_function(reconstructed_images, images)
+        # UNCOMMENT TO VISUALIZE INPUT TO CHECK CORRECTNESS
+        #show_images_and_reconstructions(images.detach().numpy(), reconstructed_images.detach().numpy(), classes.detach().numpy())
+        #plt.show()
+        train_loss = self.loss_function(reconstructed_images, images) # images are the targets in this case
 
         # Backward pass
         train_loss.backward()
@@ -200,15 +210,13 @@ class Trainer:
         average_loss = 0
         with torch.no_grad():
             # must unpack both images and labels, but we do nothing with the labels
-            #for images, labels in dataloader:
             for (images, classes) in self.test_data:
-                #images, classes = torch.from_numpy(images).float(), torch.from_numpy(classes).float()  # to tensors
-                #images = images.permute(0, 3, 1, 2)  # change axis from NHWC to NCHW
-                # Forward pass images through the autoencoder to retrieve the reconstructed images
+                # Transfer data to GPU VRAM if possible
+                images = to_cuda(images)
                 reconstructed_images, aux = model(images)
 
                 # Calculate loss
-                average_loss += loss_criterion(reconstructed_images, images) # TODO change this to the other way around (images, reconstructions)
+                average_loss += loss_criterion(reconstructed_images, images) # images are the targets in this case
             average_loss /= len(self.test_data) * len(self.test_data[0])
 
         return round(average_loss.item(), 4)

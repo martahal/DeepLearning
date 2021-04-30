@@ -3,7 +3,7 @@ from Project3.Encoder import Encoder
 from Project3.Decoder import Decoder
 from Project4.Trainer import Trainer
 from Project4.stacked_mnist import StackedMNISTData, DataMode
-from Project4.utils import make_reconstructions_figure
+from Project4.utils import make_reconstructions_figure, to_cuda
 
 import torch
 
@@ -25,7 +25,7 @@ class Generative_autoencoder:
 
 
     ):
-        self.data = self._get_data_subsample(data, batch_size)
+        self.data = self._get_data_to_tensors(data, batch_size)
         self.image_dimensions = (data.test_images.shape[-1], data.test_images.shape[-2], data.test_images.shape[-3])
         self.num_samples = num_samples
         self.batch_size = batch_size
@@ -58,8 +58,8 @@ class Generative_autoencoder:
     def train_autoencoder(self):
 
         self.autoencoder_trainer.do_autoencoder_train()
-        #select a sample of the test data we like to visualize
-        visualisation_data = self.data[1][:9]
+        #selecting a fixed sample of the test data we like to visualize
+        visualisation_data = self.data[1][:8]
         make_reconstructions_figure(
             self.autoencoder,
             visualisation_data,
@@ -81,7 +81,7 @@ class Generative_autoencoder:
         pass
 
     @staticmethod
-    def _get_data_subsample(data, batch_size):
+    def _get_data_to_tensors(data, batch_size):
         train_data_subsample, test_data = [], []
         for (images, classes) in data.batch_generator(training=True, batch_size=batch_size):
             images, classes = torch.from_numpy(images).float(), torch.from_numpy(classes).float()
@@ -98,16 +98,12 @@ class Generative_autoencoder:
 
 def main():
     batch_size = 16
-    data_object = StackedMNISTData(mode=DataMode.COLOR_BINARY_COMPLETE, default_batch_size=batch_size)
-    #Produce a subsample of the training set that we actually like to train with instead of the whole of mnist
-    #TODO consider to move this elsewhere as it might be applicable to other stuff
-
-
+    data_object = StackedMNISTData(mode=DataMode.MONO_BINARY_COMPLETE, default_batch_size=batch_size)
 
     autoencoder_learning_rate = 0.2
     autoencoder_loss_function = 'binary_cross_entropy'  # AVAILABLE 'binary_cross_entropy''MSE' #
     autoencoder_optimizer = 'SGD'  # AVAILABLE 'SGD' #'adam' #
-    autoencoder_epochs = 1  # Optimal for MNIST: 3
+    autoencoder_epochs = 2  # Optimal for MNIST: 3
 
     num_samples = 10
     latent_vector_size = 64  # recommended for MNIST between 16 and 64

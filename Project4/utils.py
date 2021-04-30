@@ -1,5 +1,6 @@
 from Project3 import visualisations
 import matplotlib.pyplot as plt
+import torch
 
 
 def make_reconstructions_figure(autoencoder, vis_data, num_images, batch_size, image_dimensions):
@@ -22,3 +23,14 @@ def make_reconstructions_figure(autoencoder, vis_data, num_images, batch_size, i
 
     visualisations.show_images_and_reconstructions(images, reconstructions, labels)
     plt.show()
+
+def to_cuda(elements):
+    """
+    Transfers every object in elements to GPU VRAM if available.
+    elements can be a object or list/tuple of objects
+    """
+    if torch.cuda.is_available():
+        if type(elements) == tuple or type(elements) == list:
+            return [x.cuda() for x in elements]
+        return elements.cuda()
+    return elements

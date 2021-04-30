@@ -31,8 +31,13 @@ def plot_metric(metric_dict, label, averaged_plot=True, n=8):
 
 
 def show_images_and_reconstructions(images, reconstructions, labels):
+    if len(images) >9:
+        print('Will not plot more than 9 images due to memory constraints')
+        num_images = 9
+    else:
+        num_images = len(images)
+
     # helper function
-    num_images = len(images)
     def imshow(image):
         # unnormalize image
         image = image / 2 + 0.5
