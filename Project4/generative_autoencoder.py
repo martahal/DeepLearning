@@ -3,7 +3,9 @@ from Project3.Encoder import Encoder
 from Project3.Decoder import Decoder
 from Project4.Trainer import Trainer
 from Project4.stacked_mnist import StackedMNISTData, DataMode
-from Project4.utils import make_reconstructions_figure, to_cuda
+from Project4 import utils
+
+import numpy as np
 
 import torch
 
@@ -25,11 +27,10 @@ class Generative_autoencoder:
 
 
     ):
-        self.data = self._get_data_to_tensors(data, batch_size)
+        self.data = utils.get_data_to_tensors(data, batch_size)
         self.image_dimensions = (data.test_images.shape[-1], data.test_images.shape[-2], data.test_images.shape[-3])
         self.num_samples = num_samples
         self.batch_size = batch_size
-
 
 
         self.encoder = Encoder(
@@ -58,19 +59,22 @@ class Generative_autoencoder:
     def train_autoencoder(self):
 
         self.autoencoder_trainer.do_autoencoder_train()
+
+        z_sample = self.get_latent_vector_and_classes(self.autoencoder.encoder, self.num_samples)#, self.dataloaders)
+        print(z_sample)
         #selecting a fixed sample of the test data we like to visualize
         visualisation_data = self.data[1][:8]
-        make_reconstructions_figure(
+        utils.make_reconstructions_figure(
             self.autoencoder,
             visualisation_data,
             num_images=9,
             batch_size=self.batch_size,
             image_dimensions=self.image_dimensions)
 
-        #z_sample = self.get_latent_vector_and_classes(self.autoencoder.encoder,self.num_samples, self.dataloaders)
+
 
     @staticmethod
-    def get_latent_vector_and_classes(encoder,n_samples, data):
+    def get_latent_vector_and_classes(encoder, n_samples): #, data):
         """
         samples a random distribution of the latent vectors, Z, that is produced by the data examples
         :param encoder: The encoder that produces the latent vectors
@@ -78,32 +82,18 @@ class Generative_autoencoder:
         :param data: input data to the encoder
         :return: a random sample of Z from the standard normal distribution
         """
-        pass
+        z = np.random.randn(n_samples, encoder.latent_vector_size)
+        return z
 
-    @staticmethod
-    def _get_data_to_tensors(data, batch_size):
-        train_data_subsample, test_data = [], []
-        for (images, classes) in data.batch_generator(training=True, batch_size=batch_size):
-            images, classes = torch.from_numpy(images).float(), torch.from_numpy(classes).float()
-            images = images.permute(0, 3, 1, 2)  # change axis from NHWC to NCHW
-            batch = (images, classes)
-            train_data_subsample.append(batch)
-
-        for (images, classes) in data.batch_generator(training=False, batch_size=batch_size):
-            images, classes = torch.from_numpy(images).float(), torch.from_numpy(classes).float()
-            images = images.permute(0, 3, 1, 2)  # change axis from NHWC to NCHW
-            batch = (images, classes)
-            test_data.append(batch)
-        return (train_data_subsample, test_data)
 
 def main():
     batch_size = 16
-    data_object = StackedMNISTData(mode=DataMode.MONO_BINARY_COMPLETE, default_batch_size=batch_size)
+    data_object = StackedMNISTData(mode=DataMode.MONO_FLOAT_COMPLETE, default_batch_size=batch_size)
 
     autoencoder_learning_rate = 0.2
     autoencoder_loss_function = 'binary_cross_entropy'  # AVAILABLE 'binary_cross_entropy''MSE' #
     autoencoder_optimizer = 'SGD'  # AVAILABLE 'SGD' #'adam' #
-    autoencoder_epochs = 2  # Optimal for MNIST: 3
+    autoencoder_epochs = 1  # Optimal for MNIST: 3
 
     num_samples = 10
     latent_vector_size = 64  # recommended for MNIST between 16 and 64
@@ -120,7 +110,6 @@ def main():
         num_samples,
     )
     gen_autoencoder.train_autoencoder()
-    print(gen_autoencoder.image_dimensions)
 
 
 if __name__ == '__main__':

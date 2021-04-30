@@ -217,7 +217,7 @@ class Trainer:
 
                 # Calculate loss
                 average_loss += loss_criterion(reconstructed_images, images) # images are the targets in this case
-            average_loss /= len(self.test_data) * len(self.test_data[0])
+            average_loss /= len(self.test_data)
 
         return round(average_loss.item(), 4)
 
