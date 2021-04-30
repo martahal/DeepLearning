@@ -1,7 +1,6 @@
 import torch
 import collections
-from Projects.Project4.stacked_mnist import StackedMNISTData
-import numpy as np
+
 
 class Trainer:
 

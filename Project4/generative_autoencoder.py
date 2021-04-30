@@ -1,13 +1,12 @@
-from Projects.Project3.Autoencoder import Autoencoder
-from Projects.Project3.Encoder import Encoder
-from Projects.Project3.Decoder import Decoder
-from Projects.Project4.Trainer import Trainer
-from Projects.Project4.stacked_mnist import StackedMNISTData, DataMode
-from Projects.Project4.utils import make_reconstructions_figure
+from Project3.Autoencoder import Autoencoder
+from Project3.Encoder import Encoder
+from Project3.Decoder import Decoder
+from Project4.Trainer import Trainer
+from Project4.stacked_mnist import StackedMNISTData, DataMode
+from Project4.utils import make_reconstructions_figure
 
-import matplotlib.pyplot as plt
 import torch
-from torch import nn
+
 
 class Generative_autoencoder:
 

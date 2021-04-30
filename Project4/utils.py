@@ -1,4 +1,4 @@
-from Projects.Project3 import visualisations
+from Project3 import visualisations
 import matplotlib.pyplot as plt
 
 
