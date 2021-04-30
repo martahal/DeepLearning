@@ -31,8 +31,13 @@ def plot_metric(metric_dict, label, averaged_plot=True, n=8):
 
 
 def show_images_and_reconstructions(images, reconstructions, labels):
+    if len(images) >9:
+        print('Will not plot more than 9 images due to memory constraints')
+        num_images = 9
+    else:
+        num_images = len(images)
+
     # helper function
-    num_images = len(images)
     def imshow(image):
         # unnormalize image
         image = image / 2 + 0.5
@@ -48,14 +53,14 @@ def show_images_and_reconstructions(images, reconstructions, labels):
     for idx in np.arange(num_images):
         ax = fig.add_subplot(2, int(np.ceil(num_images/2)), idx+1, xticks=[], yticks= [], frame_on= False)
         imshow(reconstructions[idx])
-        #ax.set_title(labels[idx])
+        ax.set_title(labels[idx])
 
     fig, axes = plt.subplots(nrows=2, ncols=int(np.ceil(num_images/2)), figsize=(num_images, 4))#, sharex=True, sharey=True)#, figsize=(num_images + 4, 4))
     fig.tight_layout()
     for idx in np.arange(num_images):
         ax = fig.add_subplot(2, int(np.ceil(num_images/2)), idx+1, xticks=[], yticks= [], frame_on= False)
         imshow(images[idx])
-        #ax.set_title(labels[idx])
+        ax.set_title(labels[idx])
 
 
 
