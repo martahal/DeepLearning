@@ -58,7 +58,7 @@ def show_images_and_reconstructions(images, labels):
         plt.xticks([])
         plt.yticks([])
         if labels is not None:
-            plt.title(f"Class is {str(labels[img_idx]).zfill(no_channels)}")
+            plt.title(f"Class is {str(int(labels[img_idx])).zfill(no_channels)}")
 
     # Show the thing ...
     plt.show()
