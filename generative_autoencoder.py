@@ -1,13 +1,11 @@
 from Project3.Autoencoder import Autoencoder
 from Project3.Encoder import Encoder
 from Project3.Decoder import Decoder
-from Project4.Trainer import Trainer
+from Trainer import Trainer
 from Project4.stacked_mnist import StackedMNISTData, DataMode
-from Project4 import utils
+import utils
 
 import numpy as np
-
-import torch
 
 
 class Generative_autoencoder:
