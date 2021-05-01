@@ -1,10 +1,12 @@
-from Project3.Autoencoder import Autoencoder
-from Project3.Encoder import Encoder
-from Project3.Decoder import Decoder
+from Project4.Autoencoder import Autoencoder
+from Project4.Encoder import Encoder
+from Project4.Decoder import Decoder
+from Project3 import visualisations
 from Trainer import Trainer
 from Project4.stacked_mnist import StackedMNISTData, DataMode
 import utils
 
+import matplotlib.pyplot as plt
 import numpy as np
 
 
@@ -34,7 +36,7 @@ class Generative_autoencoder:
         self.encoder = Encoder(
             input_shape=self.image_dimensions,
             num_filters=16,
-            last_layer_dim=(32, 10, 10),
+            last_layer_dim=(32, 4, 4),
             latent_vector_size=latent_vector_size)
 
         self.decoder = Decoder(
@@ -57,6 +59,7 @@ class Generative_autoencoder:
     def train_autoencoder(self):
 
         self.autoencoder_trainer.do_autoencoder_train()
+        self.plot_autoencoder_training(self.autoencoder_trainer)
 
         Z = self.get_latent_vector_and_classes(self.autoencoder.encoder, self.num_samples)#, self.dataloaders)
         utils.generate_images_from_Z(Z, self.autoencoder.decoder, self.image_dimensions)
@@ -84,6 +87,17 @@ class Generative_autoencoder:
         z = np.random.randn(n_samples, encoder.latent_vector_size)
         return z
 
+    @staticmethod
+    def plot_autoencoder_training(autoencoder_trainer):
+        plt.figure(figsize=(10, 8))
+        plt.title('Autoencoder loss')
+        visualisations.plot_metric(autoencoder_trainer.train_history['loss'], label='Autoencoder training loss',
+                                   averaged_plot=True)
+        visualisations.plot_metric(autoencoder_trainer.validation_history['loss'], label='Autoencoder validation loss',
+                                   averaged_plot=False)
+        # plt.ylim(bottom=0, top=1)
+        plt.legend()
+        plt.savefig(f'figures/autoencoder_{autoencoder_trainer.autoencoder_loss_function}_{autoencoder_trainer.autoencoder_epochs}_training.png')
 
 def main():
     batch_size = 16
@@ -92,7 +106,7 @@ def main():
     autoencoder_learning_rate = 0.2
     autoencoder_loss_function = 'MSE' #'binary_cross_entropy'  # AVAILABLE 'binary_cross_entropy'
     autoencoder_optimizer = 'SGD'  # AVAILABLE 'SGD' #'adam' #
-    autoencoder_epochs = 1  # Optimal for MNIST: 3
+    autoencoder_epochs = 10  # Optimal for MNIST: 3
 
     num_samples = 12
     latent_vector_size = 64  # recommended for MNIST between 16 and 64
