@@ -107,7 +107,7 @@ def main():
 
     autoencoder_learning_rate = 0.0002
     autoencoder_loss_function = 'MSE' #'binary_cross_entropy'  # AVAILABLE 'binary_cross_entropy'
-    autoencoder_optimizer = 'adam'#'SGD'  # AVAILABLE 'SGD' # #
+    autoencoder_optimizer = 'SGD'#'adam'#  # AVAILABLE 'SGD' # #
     autoencoder_epochs = 10  # Optimal for MNIST: 3
 
     num_samples = 12
