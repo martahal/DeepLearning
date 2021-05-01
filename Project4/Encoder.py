@@ -28,7 +28,7 @@ class Encoder(nn.Module):
                 stride=(3,3),
                 padding=(1,1)
             ),
-            nn.BatchNorm2d(num_filters*2),
+            nn.BatchNorm2d(num_filters),
             nn.Conv2d(
                 in_channels=self.num_filters,
                 out_channels=self.num_filters*2,
@@ -36,7 +36,7 @@ class Encoder(nn.Module):
                 stride=(3,3),
                 padding=(1, 1)
             ),
-            nn.BatchNorm2d(self.num_filters),
+            nn.BatchNorm2d(self.num_filters*2),
             nn.Conv2d(
                 in_channels=self.num_filters*2,
                 out_channels=self.last_layer_dim[0],
