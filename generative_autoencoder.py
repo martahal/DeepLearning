@@ -56,7 +56,7 @@ class Generative_autoencoder:
 
     def train_autoencoder(self):
 
-        #self.autoencoder_trainer.do_autoencoder_train()
+        self.autoencoder_trainer.do_autoencoder_train()
 
         Z = self.get_latent_vector_and_classes(self.autoencoder.encoder, self.num_samples)#, self.dataloaders)
         utils.generate_images_from_Z(Z, self.autoencoder.decoder, self.image_dimensions)
@@ -90,7 +90,7 @@ def main():
     data_object = StackedMNISTData(mode=DataMode.MONO_FLOAT_COMPLETE, default_batch_size=batch_size)
 
     autoencoder_learning_rate = 0.2
-    autoencoder_loss_function = 'binary_cross_entropy'  # AVAILABLE 'binary_cross_entropy''MSE' #
+    autoencoder_loss_function = 'MSE' #'binary_cross_entropy'  # AVAILABLE 'binary_cross_entropy'
     autoencoder_optimizer = 'SGD'  # AVAILABLE 'SGD' #'adam' #
     autoencoder_epochs = 1  # Optimal for MNIST: 3
 

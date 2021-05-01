@@ -21,14 +21,14 @@ def to_cuda(elements):
 def get_data_to_tensors(data, batch_size):
     train_data_subsample, test_data = [], []
     for (images, classes) in data.batch_generator(training=True, batch_size=batch_size):
-        #images = normalize_images(images)
+        images = normalize_images(images)
         images, classes = torch.from_numpy(images).float(), torch.from_numpy(classes).float()
         images = images.permute(0, 3, 1, 2)  # change axis from NHWC to NCHW
         batch = (images, classes)
         train_data_subsample.append(batch)
 
     for (images, classes) in data.batch_generator(training=False, batch_size=batch_size):
-        #images = normalize_images(images)
+        images = normalize_images(images)
         images, classes = torch.from_numpy(images).float(), torch.from_numpy(classes).float()
         images = images.permute(0, 3, 1, 2)  # change axis from NHWC to NCHW
         batch = (images, classes)
