@@ -22,7 +22,7 @@ class Trainer:
 
         self.batch_size = batch_size
         self.lr = lr
-        self. epochs = epochs
+        self.epochs = epochs
         self.model = model
         #Transfer model to GPU VRAM if possible
         self.model = utils.to_cuda(self.model)
