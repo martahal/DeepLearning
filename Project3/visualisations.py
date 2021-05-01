@@ -61,7 +61,7 @@ def show_images_and_reconstructions(images, labels, title):
             plt.title(f"Class is {str(int(labels[img_idx])).zfill(no_channels)}")
     plt.savefig(f'figures/{title}')
     # Show the thing ...
-    plt.show()
+    #plt.show()
 
 
 def plot_t_sne(latent_vectors_and_classes: tuple):
