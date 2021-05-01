@@ -60,16 +60,17 @@ class Generative_autoencoder:
 
         self.autoencoder_trainer.do_autoencoder_train()
 
-        z_sample = self.get_latent_vector_and_classes(self.autoencoder.encoder, self.num_samples)#, self.dataloaders)
-        print(z_sample)
+        Z = self.get_latent_vector_and_classes(self.autoencoder.encoder, self.num_samples)#, self.dataloaders)
+        utils.generate_images_from_Z(Z, self.autoencoder.decoder, self.image_dimensions)
         #selecting a fixed sample of the test data we like to visualize
-        visualisation_data = self.data[1][:8]
+        visualisation_data = self.data[1][:12]
         utils.make_reconstructions_figure(
             self.autoencoder,
             visualisation_data,
-            num_images=9,
+            num_images=12,
             batch_size=self.batch_size,
             image_dimensions=self.image_dimensions)
+
 
 
 
@@ -95,7 +96,7 @@ def main():
     autoencoder_optimizer = 'SGD'  # AVAILABLE 'SGD' #'adam' #
     autoencoder_epochs = 1  # Optimal for MNIST: 3
 
-    num_samples = 10
+    num_samples = 12
     latent_vector_size = 64  # recommended for MNIST between 16 and 64
 
     gen_autoencoder = Generative_autoencoder(

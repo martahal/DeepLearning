@@ -15,7 +15,7 @@ def main():
     autoencoder_learning_rate = 0.2
     autoencoder_loss_function = 'binary_cross_entropy'  # AVAILABLE 'binary_cross_entropy'
     autoencoder_optimizer = 'SGD'  # AVAILABLE 'SGD' #'adam' #
-    autoencoder_epochs = 3 # Optimal for MNIST: 3
+    autoencoder_epochs = 2 # Optimal for MNIST: 3
 
     freeze_encoder_weights = False
     plot_t_sne = True

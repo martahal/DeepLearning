@@ -30,38 +30,38 @@ def plot_metric(metric_dict, label, averaged_plot=True, n=8):
                          alpha=0.3, label= f'{label} variance over {n} points')
 
 
-def show_images_and_reconstructions(images, reconstructions, labels):
-    if len(images) >9:
-        print('Will not plot more than 9 images due to memory constraints')
-        num_images = 9
+def show_images_and_reconstructions(images, labels):
+    """
+    Plot data in RGB (3-channel data) or monochrome (one-channel data).
+    If data is submitted, we need to generate an example.
+    If there are many images, do a subplot-thing.
+    """
+
+    # Just a little hacky check to not make large modifications
+    if isinstance(images, list):
+        no_images = len(images)
+        no_channels = images[0].shape[0]
     else:
-        num_images = len(images)
+        no_images = images.shape[0]
+        no_channels = images.shape[-1]
 
-    # helper function
-    def imshow(image):
-        # unnormalize image
-        image = image / 2 + 0.5
-        #convert from Tensor image
-        image = np.transpose(image, (1, 2, 0))
-        plt.imshow(image)
-    '''
-    n_rows = np.ceil
-    '''
+    # Do the plotting
+    plt.Figure()
+    no_rows = np.ceil(np.sqrt(no_images))
+    no_cols = np.ceil(no_images / no_rows)
+    for img_idx in range(no_images):
+        plt.subplot(int(no_rows), int(no_cols), int(img_idx + 1))
+        if no_channels == 1:
+            plt.imshow(images[img_idx, :, :, 0], cmap="binary")
+        else:
+            plt.imshow(images[img_idx, :, :, :].astype(np.float))
+        plt.xticks([])
+        plt.yticks([])
+        if labels is not None:
+            plt.title(f"Class is {str(labels[img_idx]).zfill(no_channels)}")
 
-    fig, axes = plt.subplots(nrows=2, ncols=int(np.ceil(num_images/2)), figsize=(num_images, 4))#, sharex=True, sharey=True)#, figsize=(num_images + 4, 4))
-    fig.tight_layout()
-    for idx in np.arange(num_images):
-        ax = fig.add_subplot(2, int(np.ceil(num_images/2)), idx+1, xticks=[], yticks= [], frame_on= False)
-        imshow(reconstructions[idx])
-        ax.set_title(labels[idx])
-
-    fig, axes = plt.subplots(nrows=2, ncols=int(np.ceil(num_images/2)), figsize=(num_images, 4))#, sharex=True, sharey=True)#, figsize=(num_images + 4, 4))
-    fig.tight_layout()
-    for idx in np.arange(num_images):
-        ax = fig.add_subplot(2, int(np.ceil(num_images/2)), idx+1, xticks=[], yticks= [], frame_on= False)
-        imshow(images[idx])
-        ax.set_title(labels[idx])
-
+    # Show the thing ...
+    plt.show()
 
 
 def plot_t_sne(latent_vectors_and_classes: tuple):
