@@ -73,8 +73,9 @@ def make_reconstructions_figure(autoencoder, vis_data, num_images, batch_size, i
     reconstructions = reconstructions[:num_images]
     labels = labels[:num_images]
 #
-    visualisations.show_images_and_reconstructions(np.array(images), labels)
-    visualisations.show_images_and_reconstructions(np.array(reconstructions), labels)
+    visualisations.show_images_and_reconstructions(np.array(images), labels, title='test_set_images.png')
+    visualisations.show_images_and_reconstructions(np.array(reconstructions), labels, title='test_set_reconstructions.png')
+
     plt.show()
 
 def generate_images_from_Z(Z, decoder, image_dimensions):
@@ -92,7 +93,7 @@ def generate_images_from_Z(Z, decoder, image_dimensions):
     )
     generated_images = generated_images.detach().numpy()
     labels = None
-    visualisations.show_images_and_reconstructions(generated_images, labels)
+    visualisations.show_images_and_reconstructions(generated_images, labels, title='gen_AE_figures.png')
     plt.show()
 
 """
