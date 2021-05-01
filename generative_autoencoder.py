@@ -1,6 +1,7 @@
 from Project4.Autoencoder import Autoencoder
 from Project4.Encoder import Encoder
 from Project4.Decoder import Decoder
+from Project4.verification_net import VerificationNet
 from Project3 import visualisations
 from Trainer import Trainer
 from Project4.stacked_mnist import StackedMNISTData, DataMode
@@ -59,21 +60,53 @@ class Generative_autoencoder:
         )
 
     def train_autoencoder(self):
-        self.autoencoder_trainer.load_best_model()
+        #self.autoencoder_trainer.load_best_model()
         self.autoencoder_trainer.do_autoencoder_train()
         self.plot_autoencoder_training(self.autoencoder_trainer)
 
-        Z = self.get_latent_vector_and_classes(self.autoencoder.encoder, self.num_samples)#, self.dataloaders)
-        utils.generate_images_from_Z(Z, self.autoencoder.decoder, self.image_dimensions)
+
+
         #selecting a fixed sample of the test data we like to visualize
         visualisation_data = self.data[1][:12]
-        utils.make_reconstructions_figure(
+        images, reconstructions, labels = utils.make_reconstructions(
             self.autoencoder,
             visualisation_data,
             num_images=12,
             batch_size=self.batch_size,
             image_dimensions=self.image_dimensions)
+        # checking quality of reproduced images
+        return images, reconstructions, labels
+    
+    def generate_samples(self):
+        Z = self.get_latent_vector_and_classes(self.autoencoder.encoder, self.num_samples)#, self.dataloaders)
+        generated_images = utils.generate_images_from_Z(Z, self.autoencoder.decoder, self.image_dimensions)
+        return generated_images
 
+    def check_autoencoder_performance(self, verification_net, tolerance, images, labels=None):
+        coverage = verification_net.check_class_coverage(
+            data=images,
+            tolerance=tolerance
+        )
+        print(f"Coverage: {100 * coverage:.2f}%")
+        if labels is not None:
+            if coverage != 0.0:
+                predictability, accuracy = verification_net.check_predictability(
+                    data=images,
+                    correct_labels=labels,
+                    tolerance=tolerance
+                )
+                print(f"Predictability: {100 * predictability:.2f}%")
+                print(f"Accuracy: {100 * accuracy:.2f}%")
+        else:
+            if coverage != 0.0:
+                predictability = verification_net.check_predictability(
+                    data=images,
+                    tolerance=tolerance
+                )
+                print(f"Predictability: {100 * predictability}%")#:.2f}%")
+
+
+        
 
 
 
@@ -104,13 +137,17 @@ class Generative_autoencoder:
 def main():
     batch_size = 16
     data_object = StackedMNISTData(mode=DataMode.MONO_FLOAT_COMPLETE, default_batch_size=batch_size)
+    #instantiate verification network
+    net = VerificationNet(force_learn=False)
+    net.train(generator=data_object, epochs=5) # gen=data_object, makes sure we test on the same type of data as the model was trained on
+    verification_tolerance = 0.8 if data_object.channels == 1 else 0.5
 
     autoencoder_learning_rate = 0.0002
     autoencoder_loss_function = 'MSE' #'binary_cross_entropy'  # AVAILABLE 'binary_cross_entropy'
-    autoencoder_optimizer = 'SGD'#'adam'#  # AVAILABLE 'SGD' # #
+    autoencoder_optimizer = 'adam'#'SGD'#  # AVAILABLE 'SGD' # #
     autoencoder_epochs = 10  # Optimal for MNIST: 3
 
-    num_samples = 12
+    num_samples = 200
     latent_vector_size = 64  # recommended for MNIST between 16 and 64
 
     gen_autoencoder = Generative_autoencoder(
@@ -124,8 +161,15 @@ def main():
         batch_size,
         num_samples,
     )
-    gen_autoencoder.train_autoencoder()
+    images, reconstructions, labels = gen_autoencoder.train_autoencoder()
+    #Check quality of reconstructions
+    gen_autoencoder.check_autoencoder_performance(net, verification_tolerance, reconstructions, labels)
 
+    #Generate samples
+    #generated_images = gen_autoencoder.generate_samples()
+
+    #check quality of generated images
+    #gen_autoencoder.check_autoencoder_performance(net, verification_tolerance, generated_images)
 
 if __name__ == '__main__':
     main()

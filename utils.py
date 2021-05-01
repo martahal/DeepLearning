@@ -51,7 +51,7 @@ def normalize_images(images):
     return norm_images
 
 
-def make_reconstructions_figure(autoencoder, vis_data, num_images, batch_size, image_dimensions):
+def make_reconstructions(autoencoder, vis_data, num_images, batch_size, image_dimensions):
     # Extremely inefficient way of doing this
     # Forward all images, then selecting the ones i want to visualize
     images = []
@@ -70,13 +70,13 @@ def make_reconstructions_figure(autoencoder, vis_data, num_images, batch_size, i
         images.extend(image)
         labels.extend(label)
         reconstructions.extend(reconstruction_batch)
-    images = images[:num_images]
-    reconstructions = reconstructions[:num_images]
-    labels = labels[:num_images]
+    vis_images = images[:num_images]
+    vis_reconstructions = reconstructions[:num_images]
+    vis_labels = labels[:num_images]
 #
-    visualisations.show_images_and_reconstructions(np.array(images), labels, title='test_set_images')
-    visualisations.show_images_and_reconstructions(np.array(reconstructions), labels, title='test_set_reconstructions')
-
+    visualisations.show_images_and_reconstructions(np.array(vis_images), vis_labels, title='test_set_images')
+    visualisations.show_images_and_reconstructions(np.array(vis_reconstructions), vis_labels, title='test_set_reconstructions')
+    return np.array(images), np.array(reconstructions), np.array(labels)
 
 def generate_images_from_Z(Z, decoder, image_dimensions):
     Z = torch.from_numpy(Z).float()
@@ -93,8 +93,9 @@ def generate_images_from_Z(Z, decoder, image_dimensions):
     )
     generated_images = generated_images.cpu().detach().numpy()
     labels = None
-    visualisations.show_images_and_reconstructions(generated_images, labels, title='gen_AE_figures')
-
+    number_to_vis = 12
+    visualisations.show_images_and_reconstructions(generated_images[:number_to_vis], labels, title='gen_AE_figures')
+    return generated_images
 
 """
 Methods for saving models
