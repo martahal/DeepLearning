@@ -59,6 +59,7 @@ def make_reconstructions_figure(autoencoder, vis_data, num_images, batch_size, i
     labels = []
     for image, label in vis_data:
         #Make reconstruction
+        image  = to_cuda(image)
         reconstruction_batch, aux = autoencoder(image)
         # Convert from tensor to numpy
         image = image.view(batch_size, image_dimensions[1], image_dimensions[2], image_dimensions[0])
