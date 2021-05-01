@@ -16,6 +16,7 @@ class Trainer:
                  data,
                  loss_function,
                  optimizer,
+                 early_stop_count,
                  ):
 
         super().__init__()
@@ -55,6 +56,7 @@ class Trainer:
             raise NotImplementedError('Optimizer not implemented')
 
         self.checkpoint_dir = pathlib.Path("checkpoints")
+        self.early_stop_count = early_stop_count
 
 
 
@@ -104,6 +106,9 @@ class Trainer:
                     val_loss, accuracy = self._validation(epoch, is_autoencoder=True)
                     self.validation_history['loss'][self.global_step] = val_loss
                     self.save_model() # Saving model
+                    if self.should_early_stop():
+                        print("Early stopping.")
+                        return
 
 
     def _classifier_training_step(self, X_batch, Y_batch):
@@ -250,3 +255,19 @@ class Trainer:
                 f"Could not load best checkpoint. Did not find under: {self.checkpoint_dir}")
             return
         return self.model.load_state_dict(state_dict)
+
+    def should_early_stop(self):
+        """
+            Checks if validation loss doesn't improve over early_stop_count epochs.
+        """
+        # Check if we have more than early_stop_count elements in our validation_loss list.
+        val_loss = self.validation_history["loss"]
+        if len(val_loss) < self.early_stop_count:
+            return False
+        # We only care about the last [early_stop_count] losses.
+        relevant_loss = list(val_loss.values())[-self.early_stop_count:]
+        first_loss = relevant_loss[0]
+        if first_loss == min(relevant_loss):
+            print("Early stop criteria met")
+            return True
+        return False

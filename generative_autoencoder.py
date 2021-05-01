@@ -54,10 +54,12 @@ class Generative_autoencoder:
             model=self.autoencoder,
             data=self.data,
             loss_function=autoencoder_loss_function,
-            optimizer=autoencoder_optimizer)
+            optimizer=autoencoder_optimizer,
+            early_stop_count = 4
+        )
 
     def train_autoencoder(self):
-
+        self.autoencoder_trainer.load_best_model()
         self.autoencoder_trainer.do_autoencoder_train()
         self.plot_autoencoder_training(self.autoencoder_trainer)
 
