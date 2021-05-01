@@ -1,7 +1,7 @@
 from Encoder import Encoder
 from Decoder import Decoder
-from Trainer import Trainer
-from Dataloader import load_fashion_mnist
+#from Trainer import Trainer
+#from Dataloader import load_fashion_mnist
 
 from torch import nn
 
@@ -39,38 +39,38 @@ class Autoencoder(nn.Module):
         assert output.shape == (batch_size, self.reconstructed_image_shape), \
             f"Expected output of forward pass to be: {expected_shape}, but got: {output.shape}"
 
-def main():
-    epochs = 10
-    batch_size = 16
-    learning_rate = 0.0002
-    loss_function = 'binary_cross_entropy'
-    optimizer = 'SGD'
-
-    # Loading FashionMNIST
-    num_classes = 10
-    dataloaders = load_fashion_mnist(batch_size, D1_fraction=0.8, validation_fraction=0.1, test_fraction=0.1)
-    input_size = (1,28,28) # TODO this should be detected on the fly when we determine which dataset to run
-    latent_vector_size = 256
-
-    encoder = Encoder(
-        input_shape=input_size,
-        num_filters=4,
-        latent_vector_size=latent_vector_size)
-    decoder = Decoder(
-        input_size=latent_vector_size,
-        encoder_last_layer_dim=encoder.last_layer_dim,
-        output_size=input_size)
-    Autoencoder_model = Autoencoder(encoder, decoder, input_size)
-
-    SSN_trainer = Trainer(batch_size=batch_size,
-                          lr=learning_rate,
-                          epochs= epochs,
-                          model= Autoencoder_model,
-                          dataloaders=dataloaders,
-                          loss_function=loss_function,
-                          optimizer=optimizer)
-
-    SSN_trainer.do_autoencoder_train()
-
-if __name__ == '__main__':
-    main()
+#def main():
+#    epochs = 10
+#    batch_size = 16
+#    learning_rate = 0.0002
+#    loss_function = 'binary_cross_entropy'
+#    optimizer = 'SGD'
+#
+#    # Loading FashionMNIST
+#    num_classes = 10
+#    dataloaders = load_fashion_mnist(batch_size, D1_fraction=0.8, validation_fraction=0.1, test_fraction=0.1)
+#    input_size = (1,28,28) # TODO this should be detected on the fly when we determine which dataset to run
+#    latent_vector_size = 256
+#
+#    encoder = Encoder(
+#        input_shape=input_size,
+#        num_filters=4,
+#        latent_vector_size=latent_vector_size)
+#    decoder = Decoder(
+#        input_size=latent_vector_size,
+#        encoder_last_layer_dim=encoder.last_layer_dim,
+#        output_size=input_size)
+#    Autoencoder_model = Autoencoder(encoder, decoder, input_size)
+#
+#    SSN_trainer = Trainer(batch_size=batch_size,
+#                          lr=learning_rate,
+#                          epochs= epochs,
+#                          model= Autoencoder_model,
+#                          dataloaders=dataloaders,
+#                          loss_function=loss_function,
+#                          optimizer=optimizer)
+#
+#    SSN_trainer.do_autoencoder_train()
+#
+#if __name__ == '__main__':
+#    main()

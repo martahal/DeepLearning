@@ -79,6 +79,10 @@ def make_reconstructions_figure(autoencoder, vis_data, num_images, batch_size, i
 
 def generate_images_from_Z(Z, decoder, image_dimensions):
     Z = torch.from_numpy(Z).float()
+    # Transfer to GPU if available
+    Z = to_cuda(Z)
+    decoder = to_cuda(decoder)
+    # generate fake images
     generated_images = decoder(Z)
     generated_images = generated_images.view(
         Z.shape[0],
