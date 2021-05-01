@@ -1,7 +1,7 @@
-from Projects.Project3.Encoder import Encoder
-from Projects.Project3.Decoder import Decoder
-from Projects.Project3.Trainer import Trainer
-from Projects.Project3.Dataloader import load_fashion_mnist
+from Encoder import Encoder
+from Decoder import Decoder
+from Trainer import Trainer
+from Dataloader import load_fashion_mnist
 
 from torch import nn
 
