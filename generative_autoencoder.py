@@ -105,7 +105,7 @@ def main():
     batch_size = 16
     data_object = StackedMNISTData(mode=DataMode.MONO_FLOAT_COMPLETE, default_batch_size=batch_size)
 
-    autoencoder_learning_rate = 0.02
+    autoencoder_learning_rate = 0.0002
     autoencoder_loss_function = 'MSE' #'binary_cross_entropy'  # AVAILABLE 'binary_cross_entropy'
     autoencoder_optimizer = 'adam'#'SGD'  # AVAILABLE 'SGD' # #
     autoencoder_epochs = 10  # Optimal for MNIST: 3
