@@ -30,7 +30,7 @@ def plot_metric(metric_dict, label, averaged_plot=True, n=8):
                          alpha=0.3, label= f'{label} variance over {n} points')
 
 
-def show_images_and_reconstructions(images, labels):
+def show_images_and_reconstructions(images, labels, title):
     """
     Plot data in RGB (3-channel data) or monochrome (one-channel data).
     If data is submitted, we need to generate an example.
@@ -58,10 +58,10 @@ def show_images_and_reconstructions(images, labels):
         plt.xticks([])
         plt.yticks([])
         if labels is not None:
-            plt.title(f"Class is {str(labels[img_idx]).zfill(no_channels)}")
-
+            plt.title(f"Class is {str(int(labels[img_idx])).zfill(no_channels)}")
+    plt.savefig(f'figures/{title}')
     # Show the thing ...
-    plt.show()
+    #plt.show()
 
 
 def plot_t_sne(latent_vectors_and_classes: tuple):

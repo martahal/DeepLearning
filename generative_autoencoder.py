@@ -1,13 +1,11 @@
 from Project3.Autoencoder import Autoencoder
 from Project3.Encoder import Encoder
 from Project3.Decoder import Decoder
-from Project4.Trainer import Trainer
+from Trainer import Trainer
 from Project4.stacked_mnist import StackedMNISTData, DataMode
-from Project4 import utils
+import utils
 
 import numpy as np
-
-import torch
 
 
 class Generative_autoencoder:
@@ -58,7 +56,7 @@ class Generative_autoencoder:
 
     def train_autoencoder(self):
 
-        self.autoencoder_trainer.do_autoencoder_train()
+        #self.autoencoder_trainer.do_autoencoder_train()
 
         Z = self.get_latent_vector_and_classes(self.autoencoder.encoder, self.num_samples)#, self.dataloaders)
         utils.generate_images_from_Z(Z, self.autoencoder.decoder, self.image_dimensions)

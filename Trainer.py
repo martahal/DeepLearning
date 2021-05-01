@@ -1,8 +1,10 @@
+#from Project4.utils import to_cuda
+import utils
+
+import pathlib
 import torch
 import collections
-from Project3.visualisations import show_images_and_reconstructions
-import matplotlib.pyplot as plt
-from Project4.utils import to_cuda
+
 
 class Trainer:
 
@@ -23,8 +25,10 @@ class Trainer:
         self. epochs = epochs
         self.model = model
         #Transfer model to GPU VRAM if possible
-        self.model = to_cuda(self.model)
+        self.model = utils.to_cuda(self.model)
         (self.training_data, self.test_data) = data
+
+        self.validation_at_step = len(self.training_data)//2 # Validate model after every half epoch.
 
         # Decide loss function
         if loss_function == 'cross_entropy':
@@ -50,6 +54,7 @@ class Trainer:
         else:
             raise NotImplementedError('Optimizer not implemented')
 
+        self.checkpoint_dir = pathlib.Path("checkpoints")
 
 
 
@@ -95,11 +100,11 @@ class Trainer:
                 train_loss = self._autoencoder_training_step(images, classes)
                 self.train_history['loss'][self.global_step] = train_loss
                 self.global_step += 1
-                if self.global_step % 600 == 0:
-                    # Validate model after every 600 iteration
+                if self.global_step % self.validation_at_step == 0:
                     val_loss, accuracy = self._validation(epoch, is_autoencoder=True)
                     self.validation_history['loss'][self.global_step] = val_loss
-            #TODO Save model to save time
+                    self.save_model() # Saving model
+
 
     def _classifier_training_step(self, X_batch, Y_batch):
         """
@@ -136,7 +141,7 @@ class Trainer:
         :return: Training loss
         """
         #Transfer data to GPU VRAM if possible
-        images = to_cuda(images)
+        images = utils.to_cuda(images)
         # Forward pass through autoencoder
         reconstructed_images, aux = self.model(images)
 
@@ -212,7 +217,7 @@ class Trainer:
             # must unpack both images and labels, but we do nothing with the labels
             for (images, classes) in self.test_data:
                 # Transfer data to GPU VRAM if possible
-                images = to_cuda(images)
+                images = utils.to_cuda(images)
                 reconstructed_images, aux = model(images)
 
                 # Calculate loss
@@ -221,5 +226,27 @@ class Trainer:
 
         return round(average_loss.item(), 4)
 
+    """
+    Methods for saving and loading model
+    """
+    def save_model(self):
+        def is_best_model():
+            """
+                Returns True if current model has the lowest validation loss
+            """
+            val_loss = self.validation_history["loss"]
+            validation_losses = list(val_loss.values())
+            return validation_losses[-1] == min(validation_losses)
 
+        state_dict = self.model.state_dict()
+        filepath = self.checkpoint_dir.joinpath(f"{self.global_step}.ckpt")
 
+        utils.save_checkpoint(state_dict, filepath, is_best_model())
+
+    def load_best_model(self):
+        state_dict = utils.load_best_checkpoint(self.checkpoint_dir)
+        if state_dict is None:
+            print(
+                f"Could not load best checkpoint. Did not find under: {self.checkpoint_dir}")
+            return
+        return self.model.load_state_dict(state_dict)
