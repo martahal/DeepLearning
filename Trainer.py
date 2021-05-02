@@ -5,6 +5,11 @@ import pathlib
 import torch
 import collections
 
+import pyro
+import pyro.distributions as dist
+import pyro.contrib.examples.util  # patches torchvision
+from pyro.infer import SVI, Trace_ELBO
+#from pyro.optim import adam
 
 class Trainer:
 
@@ -59,8 +64,6 @@ class Trainer:
         self.early_stop_count = early_stop_count
 
 
-
-
         # Tracking variables
         self.train_history = dict(
             loss=collections.OrderedDict(),
@@ -73,29 +76,9 @@ class Trainer:
         )
         self.global_step = 0
 
-    def do_classifier_train(self, freeze_encoder_weights=False):
-        print('\nCLASSIFIER TRAINING\n')
-        for epoch in range(self.epochs):
-            for X_batch, Y_batch in self.d2_train_dataloader:
-                train_loss, train_accuracy = self._classifier_training_step(X_batch, Y_batch)
-                self.train_history['loss'][self.global_step] = train_loss
-                self.train_history['accuracy'][self.global_step] = train_accuracy
-                self.global_step += 1
-
-            # Validate model for each epoch
-            val_loss, val_accuracy = self._validation(epoch, is_autoencoder=False)
-            self.validation_history['loss'][self.global_step] = val_loss
-            self.validation_history['accuracy'][self.global_step] = val_accuracy
-        # Test model after all epochs
-        self.test_loss, self.test_accuracy = self._calculate_loss_and_accuracy(self.d2_test_dataloader,
-                                                                               self.model,
-                                                                               self.loss_function)
-        print(f'Test loss: {self.test_loss}',
-              f'Test accuracy: {self.test_accuracy}',
-              sep= ', ')
 
     def do_autoencoder_train(self):
-        print('\nAUTOENCODER TRAINING\n')
+        print('\nGENERATIVE AUTOENCODER TRAINING\n')
         for epoch in range(self.epochs):
             # must unpack both images and labels, but we do nothing with the labels
             for (images, classes) in self.training_data:
@@ -110,34 +93,48 @@ class Trainer:
                         print("Early stopping.")
                         return
 
+    def do_VAE_train(self):
+        print('\nVAE TRAINING\n')
+        for epoch in range(self.epochs):
+            for (images, classes) in self.training_data:
+                elbo_loss = self._VAE_training_step(images)
 
-    def _classifier_training_step(self, X_batch, Y_batch):
-        """
-        Performs forward and backward pass for each incoming batch.
-        :param X_batch: Batch of images
-        :param Y_batch: Batch of labels
-        :return: Training loss: value of training loss. Training accuracy: fraction of batch that was correctly labelled
-        """
-        # Forward pass through model
-        output_probs, aux = self.model(X_batch) # produces a tuple for some reason. fix found here: https://github.com/pytorch/vision/issues/302#issuecomment-341163548
 
-        # Calculating loss
-        train_loss = self.loss_function(output_probs, Y_batch)
 
-        # Calculating accuracy
-        predictions = torch.argmax(output_probs, dim=1)
-        total_correct = (predictions == Y_batch).sum().item()
-        total_images = predictions.shape[0]
-        train_accuracy = total_correct / total_images
+    def _VAE_training_step(self, images):
+        # Transfer to GPU if available
+        images = utils.to_cuda(images)
+        # Doing the forward pass outside of the forward method in the VAE model
+        encoded_x = self.model.encoder(images)
 
+        # Parametrize Q(z|x)
+        mu, log_variance = self.model.mu_layer(encoded_x), self.model.variance_layer(encoded_x)  # TODO Why is this called log_var?
+        sigma = torch.exp(log_variance / 2)
+        q = torch.distributions.Normal(mu, sigma)
+        z = q.rsample()
+
+        # Make reconstructions through decoder
+        x_hat = self.model.decoder(z)
+
+        # Get Gaussian likelihood reconstruction loss
+        reconstruction_loss = self._calculate_reconstruction_loss(x_hat, self.model.log_scale, images)
+
+        # Get KL Divergence
+        kl_div = self._calculate_KL_divergence(z, mu, sigma)
+
+        # Provide ELBO loss
+        elbo = kl_div - reconstruction_loss
+        elbo = elbo.mean() # TODO why?
+
+        # TODO what about the following?
         # Backward pass
-        train_loss.backward()
+        #elbo.backward()
         self.optimizer.step()
 
         # Reset gradients
         self.optimizer.zero_grad()
 
-        return train_loss, train_accuracy
+        return elbo
 
     def _autoencoder_training_step(self, images, classes):
         """
@@ -186,30 +183,7 @@ class Trainer:
 
         return loss, accuracy
 
-    def _calculate_loss_and_accuracy(self,
-                                     dataloader: torch.utils.data.DataLoader,
-                                     model: torch.nn.Module,
-                                     loss_criterion: torch.nn.modules.loss._Loss
-                                     ):
-        average_loss = 0
-        total_correct = 0
-        total_images = 0
-        with torch.no_grad():
-            for (X_batch, Y_batch) in dataloader:
-                # Forward pass the images through our model
-                output_probs, aux = model(X_batch) # produces a tuple for some reason. fix found here: https://github.com/pytorch/vision/issues/302#issuecomment-341163548
 
-                # Calculate Loss
-                average_loss += loss_criterion(output_probs, Y_batch)
-                # Calculate accuracy
-                predictions = torch.argmax(output_probs, dim=1)
-                total_correct += (predictions == Y_batch).sum().item()
-                total_images += predictions.shape[0]
-
-            average_loss /= len(dataloader)
-            accuracy = total_correct / total_images
-
-        return round(average_loss.item(), 4), round(accuracy, 4)
 
     def _calculate_autoencoder_loss(self,
                                     data,
@@ -231,6 +205,35 @@ class Trainer:
 
         return round(average_loss.item(), 4)
 
+    def _calculate_reconstruction_loss(self, x_hat, log_scale, images):
+        # Calculate the Gaussian likelihood
+        scale = torch.exp(log_scale)
+        mean = x_hat
+        distribution = torch.distributions.Normal(mean, scale)
+
+        # probability of image under p(x|z)
+        log_pxz = distribution.log_prob(images)
+        return log_pxz
+
+    def _calculate_KL_divergence(self, z, mu, sigma):
+        # Assuming normal distributions:
+        # Make fixed normal distribution
+        zeros = torch.zeros_like(mu)
+        ones = torch.zeros_like(sigma)
+        p = torch.distributions.Normal(zeros, ones)
+
+        # Make the estimated distribution from our parameters
+        q = torch.distributions.Normal(mu, sigma)
+
+        # Get log probabilities
+        log_p, log_q = p.log_prob(z), q.log_prob(z)
+
+        # Calculating kl_div
+        kl_div = (log_q - log_p)
+        # Summation trick
+        #TODO Understand what this does
+        kl_div = kl_div.sum(-1)
+        return kl_div
     """
     Methods for saving and loading model
     """
@@ -271,3 +274,6 @@ class Trainer:
             print("Early stop criteria met")
             return True
         return False
+
+
+
