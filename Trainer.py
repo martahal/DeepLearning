@@ -1,15 +1,8 @@
-#from Project4.utils import to_cuda
 import utils
 
 import pathlib
 import torch
 import collections
-
-import pyro
-import pyro.distributions as dist
-#import pyro.contrib.examples.util  # patches torchvision
-from pyro.infer import SVI, Trace_ELBO
-from pyro.optim import Adam as pyro_adam # PyCharm bug?
 
 class Trainer:
 
@@ -63,6 +56,7 @@ class Trainer:
 
         # Print model to command line
         print(self.model)
+
 
         self.checkpoint_dir = pathlib.Path("checkpoints")
         self.early_stop_count = early_stop_count

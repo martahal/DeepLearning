@@ -105,6 +105,8 @@ class VAE_Routine():
         Z = p.sample(sample_shape=temp_tensor.shape) # Wow, so ugly, but my brain hurts now
         return Z
 def main():
+    torch.manual_seed(0)
+
     batch_size = 16
     data_object = StackedMNISTData(
         mode=DataMode.MONO_FLOAT_COMPLETE,

@@ -136,6 +136,8 @@ class Generative_autoencoder:
         plt.savefig(f'figures/autoencoder_{autoencoder_trainer.loss_function}_{autoencoder_trainer.epochs}_training.png')
 
 def main():
+    torch.manual_seed(0)
+
     batch_size = 16
     data_object = StackedMNISTData(mode=DataMode.MONO_FLOAT_COMPLETE, default_batch_size=batch_size)
     #instantiate verification network

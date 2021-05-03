@@ -1,10 +1,5 @@
-import pytorch_lightning as pl
 from torch import nn
-#import torch
-#import pyro
-#import pyro.distributions as dist
-#from Project4.Encoder import Encoder
-#from Project4.Decoder import Decoder
+
 from Project4.stacked_mnist import StackedMNISTData
 from Project4.verification_net import VerificationNet
 
