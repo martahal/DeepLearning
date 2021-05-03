@@ -48,7 +48,7 @@ class SSN:
 
         self.decoder = Decoder(
             input_size=latent_vector_size,
-            encoder_last_layer_dim=self.encoder.last_layer_dim,
+            encoder_last_layer_dim=self.encoder.last_conv_layer_dim,
             hidden_filters=self.encoder.num_filters,
             output_size=image_dimensions)
 

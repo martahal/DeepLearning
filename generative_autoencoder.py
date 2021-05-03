@@ -37,12 +37,12 @@ class Generative_autoencoder:
         self.encoder = Encoder(
             input_shape=self.image_dimensions,
             num_filters=16,
-            last_layer_dim=(32, 4, 4),
-            latent_vector_size=latent_vector_size)
+            last_conv_layer_dim=(32, 4, 4),
+            output_vector_size=latent_vector_size)
 
         self.decoder = Decoder(
             input_size=latent_vector_size,
-            encoder_last_layer_dim=self.encoder.last_layer_dim,
+            encoder_last_layer_dim=self.encoder.last_conv_layer_dim,
             hidden_filters=self.encoder.num_filters,
             output_size=self.image_dimensions)
 
@@ -119,7 +119,7 @@ class Generative_autoencoder:
         :param data: input data to the encoder
         :return: a random sample of Z from the standard normal distribution
         """
-        z = np.random.randn(n_samples, encoder.latent_vector_size)
+        z = np.random.randn(n_samples, encoder.output_vector_size)
         return z
 
     @staticmethod

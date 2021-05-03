@@ -1,25 +1,27 @@
-from torch import nn
-
+from torch import nn, distributions
+import torch
 class Encoder(nn.Module):
 
     def __init__(self,
                  input_shape,
                  num_filters,
                  last_conv_layer_dim,
-                 output_vector_size):
+                 output_vector_size,
+                 latent_vector_size):
         """
         Constructs the encoder used in the SSN and SCN
         :param input_shape: tuple, (number of color channels of the image, image width, image height)
-        :param output_vector_size: int, length of latent vector
+        :param latent_vector_size: int, length of latent vector
         """
         super().__init__()
 
         self.input_channels = input_shape[0]
         self.num_filters = num_filters
-        self.output_vector_size = output_vector_size
+        self.output_vector_size =output_vector_size
+        self.latent_vector_size = latent_vector_size
         self.last_conv_layer_dim = last_conv_layer_dim
         #self.last_layer_dim = (self.num_filters, input_shape[1], input_shape[2]) # = num_filters * width * height * some constant depending on convolution process
-        self.model = nn.Sequential(
+        self.body = nn.Sequential(
             #  [in: 1, out ___ , input spatial size: __x__, output spatial size: __x__ (same spatial output as input) ]
             nn.Conv2d(
                 in_channels=self.input_channels,
@@ -50,18 +52,32 @@ class Encoder(nn.Module):
                 in_features=self.last_conv_layer_dim[0] * self.last_conv_layer_dim[1] * self.last_conv_layer_dim[2],
                 out_features=self.output_vector_size),
         )
+        self.mean_layer = nn.Linear(self.output_vector_size, self.latent_vector_size)
+        self.log_std_layer = nn.Linear(self.output_vector_size, self.latent_vector_size)
 
     def forward(self, x):
        """
        Performs the forward pass of the encoder
        :param x:  tensor, image input shape [batch size, image_width, image_height]
-       :return output: the latent vector of the encoder, shape [batch size, latent vector size]
+       :return mean and log std values
        """
-       x = self.model(x)
-       output = x
+       x = self.body(x)
 
-       self._test_correct_output(output)
-       return output
+       #self._test_correct_output(x)
+       return self.mean_layer(x), self.log_std_layer(x)
+
+    def sample_encoded_x(self, x):
+        # Learn a parametrization q(z|x), make the distribution and sample from it
+        mean, log_var = self.forward(x)
+        std = torch.exp(log_var/2)
+        #Debugging
+        #ok = distributions.Normal.arg_constraints["scale"].check(std)
+        #bad_elements = std[~ok]
+        #print(bad_elements)
+        #Debugging
+        q = distributions.Normal(mean, std)
+        z = q.rsample()
+        return z, mean, std
 
     def _test_correct_output(self, output):
         batch_size = output.shape[0]

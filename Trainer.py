@@ -7,9 +7,9 @@ import collections
 
 import pyro
 import pyro.distributions as dist
-import pyro.contrib.examples.util  # patches torchvision
+#import pyro.contrib.examples.util  # patches torchvision
 from pyro.infer import SVI, Trace_ELBO
-#from pyro.optim import adam
+from pyro.optim import Adam as pyro_adam # PyCharm bug?
 
 class Trainer:
 
@@ -22,6 +22,7 @@ class Trainer:
                  loss_function,
                  optimizer,
                  early_stop_count,
+                 is_vae = False,
                  ):
 
         super().__init__()
@@ -36,6 +37,7 @@ class Trainer:
 
         self.validation_at_step = len(self.training_data)//2 # Validate model after every half epoch.
 
+
         # Decide loss function
         if loss_function == 'cross_entropy':
             self.loss_function = torch.nn.CrossEntropyLoss()
@@ -43,12 +45,11 @@ class Trainer:
             self.loss_function = torch.nn.BCELoss()
         elif loss_function == 'MSE':
             self.loss_function = torch.nn.MSELoss()
+        elif loss_function == 'elbo':
+            self.loss_function = None # This is handled elsewhere
         else:
             # TODO
             raise NotImplementedError('This loss function is not implemented yet')
-
-        # Print model to command line
-        print(self.model)
 
         # Define optimizer
         if optimizer == 'SGD':
@@ -59,6 +60,9 @@ class Trainer:
                                               self.lr)
         else:
             raise NotImplementedError('Optimizer not implemented')
+
+        # Print model to command line
+        print(self.model)
 
         self.checkpoint_dir = pathlib.Path("checkpoints")
         self.early_stop_count = early_stop_count
@@ -96,39 +100,60 @@ class Trainer:
     def do_VAE_train(self):
         print('\nVAE TRAINING\n')
         for epoch in range(self.epochs):
+            epoch_loss = 0.
             for (images, classes) in self.training_data:
-                elbo_loss = self._VAE_training_step(images)
+                #images = utils.to_cuda(images)
+                #x_hat, mean, log_std = self.model(images)
+                train_loss = self._VAE_training_step(images)#x_hat, mean, log_std)
+
+                self.train_history['loss'][self.global_step] = train_loss
+                self.global_step += 1
+                if self.global_step % self.validation_at_step == 0:
+                    val_loss = self._validation(epoch, is_autoencoder=False)
+                    self.validation_history['loss'][self.global_step] = val_loss
+                    self.save_model()  # Saving model
+                    if self.should_early_stop():
+                        print("Early stopping.")
+                        return
 
 
 
-    def _VAE_training_step(self, images):
+
+    def _VAE_training_step(self, images): # , mean, log_std):
         # Transfer to GPU if available
         images = utils.to_cuda(images)
         # Doing the forward pass outside of the forward method in the VAE model
-        encoded_x = self.model.encoder(images)
+        x_hat, mean, log_std = self.model(images)
 
-        # Parametrize Q(z|x)
-        mu, log_variance = self.model.mu_layer(encoded_x), self.model.variance_layer(encoded_x)  # TODO Why is this called log_var?
-        sigma = torch.exp(log_variance / 2)
-        q = torch.distributions.Normal(mu, sigma)
-        z = q.rsample()
+        reconstruction_loss = self._calculate_reconstruction_loss(x_hat, images)
 
-        # Make reconstructions through decoder
-        x_hat = self.model.decoder(z)
+        kl_div = self._calculate_KL_divergence(mean, log_std)
 
-        # Get Gaussian likelihood reconstruction loss
-        reconstruction_loss = self._calculate_reconstruction_loss(x_hat, self.model.log_scale, images)
+        elbo = -1 * (kl_div + reconstruction_loss).mean() / images.shape[0]
+        ## Parametrize Q(z|x)
+        #mu, log_variance = self.model.mu_layer(encoded_x), self.model.variance_layer(encoded_x)  # TODO Why is this called log_var?
+        #sigma = torch.exp(log_variance / 2)
+        #q = torch.distributions.Normal(mu, sigma)
+        #z = q.rsample()
+#
+        ## Make reconstructions through decoder
+        #x_hat = self.model.decoder(z)
+#
+        ## Get Gaussian likelihood reconstruction loss
+        #reconstruction_loss = self._calculate_reconstruction_loss(x_hat, self.model.log_scale, images)
+#
+        ## Get KL Divergence
+        #kl_div = self._calculate_KL_divergence(mean, log_std) # z, mu, sigma)
 
-        # Get KL Divergence
-        kl_div = self._calculate_KL_divergence(z, mu, sigma)
 
-        # Provide ELBO loss
-        elbo = kl_div - reconstruction_loss
-        elbo = elbo.mean() # TODO why?
 
-        # TODO what about the following?
-        # Backward pass
-        #elbo.backward()
+        ## Provide ELBO loss
+        #elbo = kl_div - reconstruction_loss
+        #elbo = elbo.mean() # TODO why?
+#
+        ## TODO what about the following?
+        ## Backward pass
+        elbo.backward()
         self.optimizer.step()
 
         # Reset gradients
@@ -164,26 +189,24 @@ class Trainer:
 
 
     def _validation(self, epoch, is_autoencoder:bool):
-        # Set module in evaluation mode
-        self.model.eval()
         if is_autoencoder:
-            #loss = self._calculate_autoencoder_loss(self.d2_val_dataloader, self.model, self.loss_function)
+            # Set module in evaluation mode
+            self.model.eval()
             loss = self._calculate_autoencoder_loss(self.test_data, self.model, self.loss_function)
             accuracy = 'N/A'
+            # Set model back into training mode
+            self.model.train()
         else:
-            loss, accuracy = self._calculate_loss_and_accuracy(self.d2_val_dataloader, self.model, self.loss_function)
+            loss = self._calculate_vae_loss()
+            accuracy = 'N/A'
 
         print(f'Epoch: {epoch:>1}',
               f'Iteration: {self.global_step}',
               f'Validation loss: {loss}',
               f'Validation accuracy {accuracy}',
               sep=', ')
-        # Set model back into training mode
-        self.model.train()
 
         return loss, accuracy
-
-
 
     def _calculate_autoencoder_loss(self,
                                     data,
@@ -198,42 +221,65 @@ class Trainer:
                 # Transfer data to GPU VRAM if possible
                 images = utils.to_cuda(images)
                 reconstructed_images, aux = model(images)
-
                 # Calculate loss
                 average_loss += loss_criterion(reconstructed_images, images) # images are the targets in this case
             average_loss /= len(self.test_data)
 
         return round(average_loss.item(), 4)
 
-    def _calculate_reconstruction_loss(self, x_hat, log_scale, images):
-        # Calculate the Gaussian likelihood
-        scale = torch.exp(log_scale)
-        mean = x_hat
-        distribution = torch.distributions.Normal(mean, scale)
+    def _calculate_vae_loss(self):
+        elbo_test_loss = 0.
+        for (images, classes) in self.test_data:
+            images = utils.to_cuda(images)
+            x_hat, mean, log_std = self.model(images)
 
-        # probability of image under p(x|z)
-        log_pxz = distribution.log_prob(images)
-        return log_pxz
+            reconstruction_loss = self._calculate_reconstruction_loss(x_hat, images)
 
-    def _calculate_KL_divergence(self, z, mu, sigma):
-        # Assuming normal distributions:
-        # Make fixed normal distribution
-        zeros = torch.zeros_like(mu)
-        ones = torch.zeros_like(sigma)
-        p = torch.distributions.Normal(zeros, ones)
+            kl_div = self._calculate_KL_divergence(mean, log_std)
 
-        # Make the estimated distribution from our parameters
-        q = torch.distributions.Normal(mu, sigma)
+            elbo_test_loss += -1 * (kl_div + reconstruction_loss).mean() / images.shape[0]
+        total_test_loss = elbo_test_loss / len(self.test_data)
+        return total_test_loss
 
-        # Get log probabilities
-        log_p, log_q = p.log_prob(z), q.log_prob(z)
 
-        # Calculating kl_div
-        kl_div = (log_q - log_p)
-        # Summation trick
-        #TODO Understand what this does
-        kl_div = kl_div.sum(-1)
+    def _calculate_reconstruction_loss(self, x_hat, images, log_scale=None):
+        if log_scale is not None:
+            # Calculate the Gaussian likelihood
+            scale = torch.exp(log_scale)
+            mean = x_hat
+            distribution = torch.distributions.Normal(mean, scale)
+
+            # probability of image under p(x|z)
+            log_pxz = distribution.log_prob(images)
+            return log_pxz
+        else:
+            #Calculate log likelihood assuming multivariate Bernoulli distribution
+            recon_loss = torch.sum((images * torch.log(x_hat + 1e-9)) + \
+            (1 - images) * torch.log(1 - x_hat + 1e-9), axis=(1, 2, 3))
+            return recon_loss
+
+    def _calculate_KL_divergence(self, mean, log_std ):#z, mu, sigma):
+
+        kl_div = 0.5 * torch.sum(1 + torch.log(log_std.exp() ** 2 + 1e-9) - mean.pow(2) - log_std.exp() ** 2, axis=1)
         return kl_div
+        ## Assuming normal distributions:
+        ## Make fixed normal distribution
+        #zeros = torch.zeros_like(mu)
+        #ones = torch.zeros_like(sigma)
+        #p = torch.distributions.Normal(zeros, ones)
+#
+        ## Make the estimated distribution from our parameters
+        #q = torch.distributions.Normal(mu, sigma)
+#
+        ## Get log probabilities
+        #log_p, log_q = p.log_prob(z), q.log_prob(z)
+#
+        ## Calculating kl_div
+        #kl_div = (log_q - log_p)
+        ## Summation trick
+        ##TODO Understand what this does
+        #kl_div = kl_div.sum(-1)
+        #return kl_div
     """
     Methods for saving and loading model
     """
@@ -274,6 +320,7 @@ class Trainer:
             print("Early stop criteria met")
             return True
         return False
+
 
 
 
