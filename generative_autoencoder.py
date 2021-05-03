@@ -7,6 +7,7 @@ from Trainer import Trainer
 from Project4.stacked_mnist import StackedMNISTData, DataMode
 import utils
 
+import torch
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -65,7 +66,6 @@ class Generative_autoencoder:
         self.plot_autoencoder_training(self.autoencoder_trainer)
 
 
-
         #selecting a fixed sample of the test data we like to visualize
         visualisation_data = self.data[1][:12]
         images, reconstructions, labels = utils.make_reconstructions(
@@ -111,16 +111,17 @@ class Generative_autoencoder:
 
 
     @staticmethod
-    def get_latent_vector_and_classes(encoder, n_samples): #, data):
+    def get_latent_vector_and_classes(encoder, n_samples):
         """
-        samples a random distribution of the latent vectors, Z, that is produced by the data examples
+        samples a random distribution of the latent vectors, Z
         :param encoder: The encoder that produces the latent vectors
         :param n_samples: number of samples from Z
-        :param data: input data to the encoder
         :return: a random sample of Z from the standard normal distribution
         """
-        z = np.random.randn(n_samples, encoder.output_vector_size)
-        return z
+        p = torch.distributions.Normal(torch.zeros(encoder.latent_vector_size), torch.ones(encoder.latent_vector_size))
+        temp_tensor = torch.ones(n_samples)
+        Z = p.sample(sample_shape=temp_tensor.shape)  # Wow, so ugly, but my brain hurts now
+        return Z
 
     @staticmethod
     def plot_autoencoder_training(autoencoder_trainer):

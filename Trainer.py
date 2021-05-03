@@ -109,7 +109,7 @@ class Trainer:
                 self.train_history['loss'][self.global_step] = train_loss
                 self.global_step += 1
                 if self.global_step % self.validation_at_step == 0:
-                    val_loss = self._validation(epoch, is_autoencoder=False)
+                    val_loss, accuracy = self._validation(epoch, is_autoencoder=False)
                     self.validation_history['loss'][self.global_step] = val_loss
                     self.save_model()  # Saving model
                     if self.should_early_stop():
@@ -122,7 +122,7 @@ class Trainer:
     def _VAE_training_step(self, images): # , mean, log_std):
         # Transfer to GPU if available
         images = utils.to_cuda(images)
-        # Doing the forward pass outside of the forward method in the VAE model
+
         x_hat, mean, log_std = self.model(images)
 
         reconstruction_loss = self._calculate_reconstruction_loss(x_hat, images)
@@ -189,17 +189,17 @@ class Trainer:
 
 
     def _validation(self, epoch, is_autoencoder:bool):
+        # Set module in evaluation mode
+        self.model.eval()
         if is_autoencoder:
-            # Set module in evaluation mode
-            self.model.eval()
             loss = self._calculate_autoencoder_loss(self.test_data, self.model, self.loss_function)
             accuracy = 'N/A'
-            # Set model back into training mode
-            self.model.train()
+
         else:
             loss = self._calculate_vae_loss()
             accuracy = 'N/A'
-
+        # Set model back into training mode
+        self.model.train()
         print(f'Epoch: {epoch:>1}',
               f'Iteration: {self.global_step}',
               f'Validation loss: {loss}',

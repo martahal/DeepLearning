@@ -78,8 +78,36 @@ def make_reconstructions(autoencoder, vis_data, num_images, batch_size, image_di
     visualisations.show_images_and_reconstructions(np.array(vis_reconstructions), vis_labels, title='test_set_reconstructions')
     return np.array(images), np.array(reconstructions), np.array(labels)
 
+
+def make_vae_reconstructions(vae, vis_data, num_images, batch_size, image_dimensions):
+    images = []
+    reconstructions = []
+    labels = []
+    for image, label in vis_data:
+        # Make reconstruction
+        image = to_cuda(image)
+        reconstruction_batch, aux1, aux2 = vae(image)
+        # Convert from tensor to numpy
+        image = image.view(batch_size, image_dimensions[1], image_dimensions[2], image_dimensions[0])
+        image = image.cpu().detach().numpy()
+        label = label.cpu().detach().numpy()
+        reconstruction_batch = reconstruction_batch.view(batch_size, image_dimensions[1], image_dimensions[2],
+                                                         image_dimensions[0])
+        reconstruction_batch = reconstruction_batch.cpu().detach().numpy()
+        images.extend(image)
+        labels.extend(label)
+        reconstructions.extend(reconstruction_batch)
+    vis_images = images[:num_images]
+    vis_reconstructions = reconstructions[:num_images]
+    vis_labels = labels[:num_images]
+
+    visualisations.show_images_and_reconstructions(np.array(vis_images), vis_labels, title='test_set_images')
+    visualisations.show_images_and_reconstructions(np.array(vis_reconstructions), vis_labels,
+                                                   title='test_set_vae_reconstructions')
+    return np.array(images), np.array(reconstructions), np.array(labels)
+
 def generate_images_from_Z(Z, decoder, image_dimensions):
-    Z = torch.from_numpy(Z).float()
+    #Z = torch.from_numpy(Z).float()
     # Transfer to GPU if available
     Z = to_cuda(Z)
     decoder = to_cuda(decoder)
