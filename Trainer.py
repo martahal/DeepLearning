@@ -233,7 +233,7 @@ class Trainer:
 
             elbo_test_loss += -1 * (kl_div + reconstruction_loss).mean() / images.shape[0]
         total_test_loss = elbo_test_loss / len(self.test_data)
-        return total_test_loss
+        return round(total_test_loss.item(), 4)
 
 
     def _calculate_reconstruction_loss(self, x_hat, images, log_scale=None):
@@ -242,7 +242,6 @@ class Trainer:
             scale = torch.exp(log_scale)
             mean = x_hat
             distribution = torch.distributions.Normal(mean, scale)
-
             # probability of image under p(x|z)
             log_pxz = distribution.log_prob(images)
             return log_pxz
