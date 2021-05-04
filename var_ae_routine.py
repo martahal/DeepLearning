@@ -30,6 +30,8 @@ class VAE_Routine():
         self.num_samples = num_samples
         self.batch_size = batch_size
         self.enc_last_layer_dim =(8,10,10)#(32, 2, 2)# (8, 4, 4)#
+        self.latent_vector_size = latent_vector_size
+
         self.encoder = Encoder(
             input_shape=self.image_dimensions,
             num_filters=16,
@@ -61,7 +63,7 @@ class VAE_Routine():
     def train_vae(self):
         #self.vae_trainer.load_best_model()
         self.vae_trainer.do_VAE_train()
-        self.plot_vae_training(self.vae_trainer)
+        self.plot_vae_training(self.vae_trainer, self.enc_last_layer_dim)
 
         # selecting a fixed sample of the test data we like to visualize
         visualisation_data = self.data[1][:12]
@@ -70,7 +72,9 @@ class VAE_Routine():
             visualisation_data,
             num_images=12,
             batch_size=self.batch_size,
-            image_dimensions=self.image_dimensions)
+            image_dimensions=self.image_dimensions,
+            title=f'VAE_z_size:{self.latent_vector_size}_lr_{self.vae_trainer.lr}_epochs:{self.vae_trainer.epochs}'
+        )
         # checking quality of reproduced images
         # Returned images are numpy arrays
         return images, reconstructions, labels
@@ -105,7 +109,7 @@ class VAE_Routine():
 
 
     @staticmethod
-    def plot_vae_training(vae_trainer):
+    def plot_vae_training(vae_trainer, enc_last_layer_dim):
         plt.figure(figsize=(10, 8))
         plt.title('ELBO loss')
         visualisations.plot_metric(vae_trainer.train_history['loss'], label='VAE training loss',
@@ -115,7 +119,7 @@ class VAE_Routine():
         # plt.ylim(bottom=0, top=1)
         plt.legend()
         plt.savefig(
-            f'figures/VAE_{vae_trainer.loss_function}_{vae_trainer.epochs}_training.png')
+            f'figures/VAE_ll_dim:{enc_last_layer_dim}_lr:{vae_trainer.lr}_epochs:{vae_trainer.epochs}_training.png')
 
     @staticmethod
     def get_latent_vectors(encoder, n_samples):
@@ -147,7 +151,7 @@ def main():
     optimizer= 'adam'
     epochs = 1
 
-    latent_vector_size = 256
+    latent_vector_size = 128
     num_samples = 200
 
     vae_routine = VAE_Routine(

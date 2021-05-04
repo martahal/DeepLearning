@@ -79,7 +79,7 @@ def make_reconstructions(autoencoder, vis_data, num_images, batch_size, image_di
     return np.array(images), np.array(reconstructions), np.array(labels)
 
 
-def make_vae_reconstructions(vae, vis_data, num_images, batch_size, image_dimensions):
+def make_vae_reconstructions(vae, vis_data, num_images, batch_size, image_dimensions, title):
     images = []
     reconstructions = []
     labels = []
@@ -104,9 +104,9 @@ def make_vae_reconstructions(vae, vis_data, num_images, batch_size, image_dimens
     vis_reconstructions = reconstructions[:num_images]
     vis_labels = labels[:num_images]
 
-    visualisations.show_images_and_reconstructions(np.array(vis_images), 'test_set_images', vis_labels)
+    visualisations.show_images_and_reconstructions(np.array(vis_images), title, vis_labels)
     visualisations.show_images_and_reconstructions(np.array(vis_reconstructions),
-                                                   'test_set_vae_reconstructions', vis_labels)
+                                                   f'{title}_reconstructions', vis_labels)
     return np.array(images), np.array(reconstructions), np.array(labels)
 
 def generate_images_from_Z(Z, decoder, image_dimensions, title):
