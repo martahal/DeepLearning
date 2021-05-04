@@ -30,7 +30,7 @@ def plot_metric(metric_dict, label, averaged_plot=True, n=8):
                          alpha=0.3, label= f'{label} variance over {n} points')
 
 
-def show_images_and_reconstructions(images, labels, title):
+def show_images_and_reconstructions(images, title, labels = None):
     """
     Plot data in RGB (3-channel data) or monochrome (one-channel data).
     If data is submitted, we need to generate an example.
