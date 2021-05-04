@@ -29,10 +29,10 @@ class VAE_Routine():
         self.image_dimensions = (data.test_images.shape[-1], data.test_images.shape[-2], data.test_images.shape[-3])
         self.num_samples = num_samples
         self.batch_size = batch_size
-        self.enc_last_layer_dim = (8, 2, 2)
+        self.enc_last_layer_dim =(16,10,10)#(32, 2, 2)# (8, 4, 4)#
         self.encoder = Encoder(
             input_shape=self.image_dimensions,
-            num_filters=128,
+            num_filters=32,
             last_conv_layer_dim=self.enc_last_layer_dim,
             output_vector_size=latent_vector_size * 2, # trying this first
             latent_vector_size= latent_vector_size # TODO check this
@@ -59,6 +59,7 @@ class VAE_Routine():
         )
 
     def train_vae(self):
+        #self.vae_trainer.load_best_model()
         self.vae_trainer.do_VAE_train()
         self.plot_vae_training(self.vae_trainer)
 
@@ -105,7 +106,7 @@ class VAE_Routine():
         Z = p.sample(sample_shape=temp_tensor.shape) # Wow, so ugly, but my brain hurts now
         return Z
 def main():
-    torch.manual_seed(0)
+    torch.manual_seed(1)
 
     batch_size = 16
     data_object = StackedMNISTData(
@@ -117,13 +118,12 @@ def main():
         epochs=5)  # gen=data_object, makes sure we test on the same type of data as the model was trained on
     verification_tolerance = 0.8 if data_object.channels == 1 else 0.5
 
-    learning_rate = 1.0e-3
+    learning_rate = 1.0e-2
     loss_function = 'elbo'
     optimizer= 'adam'
-    epochs = 1
+    epochs = 20
 
-    latent_vector_size = 32
-    batch_size = 16
+    latent_vector_size = 256
     num_samples = 200
 
     vae_routine = VAE_Routine(

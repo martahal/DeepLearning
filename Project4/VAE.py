@@ -14,7 +14,7 @@ class VAE(nn.Module):
         encoded_x, mean, log_std = self.encoder.sample_encoded_x(x)
 
         x_hat = self.decoder(encoded_x)
-        return x_hat, mean, log_std
+        return x_hat, mean, log_std, encoded_x
 
 
 

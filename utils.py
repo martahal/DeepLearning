@@ -86,7 +86,7 @@ def make_vae_reconstructions(vae, vis_data, num_images, batch_size, image_dimens
     for image, label in vis_data:
         # Make reconstruction
         image = to_cuda(image)
-        reconstruction_batch, aux1, aux2 = vae(image)
+        reconstruction_batch, aux1, aux2, aux_3 = vae(image)
         # Convert from tensor to numpy
         image = image.view(batch_size, image_dimensions[1], image_dimensions[2], image_dimensions[0])
         image = image.cpu().detach().numpy()
@@ -104,9 +104,9 @@ def make_vae_reconstructions(vae, vis_data, num_images, batch_size, image_dimens
     vis_reconstructions = reconstructions[:num_images]
     vis_labels = labels[:num_images]
 
-    visualisations.show_images_and_reconstructions(np.array(vis_images), vis_labels, title='test_set_images')
-    visualisations.show_images_and_reconstructions(np.array(vis_reconstructions), vis_labels,
-                                                   title='test_set_vae_reconstructions')
+    visualisations.show_images_and_reconstructions(np.array(vis_images), 'test_set_images', vis_labels)
+    visualisations.show_images_and_reconstructions(np.array(vis_reconstructions),
+                                                   'test_set_vae_reconstructions', vis_labels)
     return np.array(images), np.array(reconstructions), np.array(labels)
 
 def generate_images_from_Z(Z, decoder, image_dimensions, title):
@@ -125,7 +125,7 @@ def generate_images_from_Z(Z, decoder, image_dimensions, title):
     generated_images = generated_images.cpu().detach().numpy()
     labels = None
     number_to_vis = 12
-    visualisations.show_images_and_reconstructions(generated_images[:number_to_vis], labels, title=title)
+    visualisations.show_vae_generated_img(generated_images[:number_to_vis], title=title)
     return generated_images
 
 """
