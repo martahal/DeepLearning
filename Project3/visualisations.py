@@ -63,6 +63,37 @@ def show_images_and_reconstructions(images, title, labels = None):
     # Show the thing ...
     plt.show()
 
+def show_vae_generated_img(images, title):
+    """
+    Plot data in RGB (3-channel data) or monochrome (one-channel data).
+    If data is submitted, we need to generate an example.
+    If there are many images, do a subplot-thing.
+    """
+
+    # Just a little hacky check to not make large modifications
+    if isinstance(images, list):
+        no_images = len(images)
+        no_channels = images[0].shape[0]
+    else:
+        no_images = images.shape[0]
+        no_channels = images.shape[-1]
+
+    # Do the plotting
+    plt.Figure()
+    no_rows = np.ceil(np.sqrt(no_images))
+    no_cols = np.ceil(no_images / no_rows)
+    for img_idx in range(no_images):
+        plt.subplot(int(no_rows), int(no_cols), int(img_idx + 1))
+        if no_channels == 1:
+            plt.imshow(images[img_idx, :, :, 0], cmap="binary")
+        else:
+            plt.imshow(images[img_idx, :, :, :].astype(np.float))
+        plt.xticks([])
+        plt.yticks([])
+
+    plt.savefig(f'figures/{title}.png')
+    # Show the thing ...
+    plt.show()
 
 def plot_t_sne(latent_vectors_and_classes: tuple):
     latent_vectors = latent_vectors_and_classes[0]

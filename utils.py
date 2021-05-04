@@ -125,7 +125,7 @@ def generate_images_from_Z(Z, decoder, image_dimensions, title):
     generated_images = generated_images.cpu().detach().numpy()
     labels = None
     number_to_vis = 12
-    visualisations.show_images_and_reconstructions(generated_images[:number_to_vis], title=title)
+    visualisations.show_vae_generated_img(generated_images[:number_to_vis], title=title)
     return generated_images
 
 """
