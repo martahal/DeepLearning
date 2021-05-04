@@ -29,6 +29,7 @@ class Decoder(nn.Module):
             nn.Unflatten(
                 dim= 1,
                 unflattened_size=self.encoder_last_layer_dim),
+
             nn.ConvTranspose2d(
                 in_channels=self.encoder_last_layer_dim[0],
                 out_channels=self.hidden_filters,
@@ -36,6 +37,7 @@ class Decoder(nn.Module):
                 stride=(1,1),
                 padding=(1,1)
             ),
+            nn.LeakyReLU(),
             #nn.BatchNorm2d(self.hidden_filters//4),
             #nn.ConvTranspose2d(
             #    in_channels=self.hidden_filters//4,
@@ -52,6 +54,7 @@ class Decoder(nn.Module):
             #    stride=(3, 3),
             #    padding=(1, 1)
             #),
+
             nn.BatchNorm2d(self.hidden_filters),
             nn.ConvTranspose2d(
                 in_channels=self.hidden_filters,
@@ -61,7 +64,7 @@ class Decoder(nn.Module):
                 padding=(1, 1)
             ),
             nn.BatchNorm2d(self.reconstructed_channels),
-            nn.ReLU(),
+            nn.LeakyReLU(),
             nn.Sigmoid() # scale reconstruction between 0 and 1
         )
 
