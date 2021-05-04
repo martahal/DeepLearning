@@ -66,7 +66,7 @@ class VAE_Routine():
         self.plot_vae_training(self.vae_trainer, self.enc_last_layer_dim)
 
         # selecting a fixed sample of the test data we like to visualize
-        visualisation_data = self.data[1][:12]
+        visualisation_data = self.data[1][:] #self.data[1][:12]
         images, reconstructions, labels = utils.make_vae_reconstructions(
             self.vae,
             visualisation_data,
@@ -81,7 +81,12 @@ class VAE_Routine():
 
     def generate_samples(self):
         Z = self.get_latent_vectors(self.vae.encoder, self.num_samples )
-        generated_images = utils.generate_images_from_Z(Z, self.vae.decoder, self.image_dimensions, title= "VAE_generated_images")
+        generated_images = utils.generate_images_from_Z(
+            Z,
+            self.vae.decoder,
+            self.image_dimensions,
+            title=f'VAE_z_size:{self.latent_vector_size}_lr_{self.vae_trainer.lr}_epochs:{self.vae_trainer.epochs}'
+        )
         return generated_images
 
     def check_vae_performance(self, verification_net, tolerance, images, labels=None):
@@ -152,7 +157,7 @@ def main():
     epochs = 1
 
     latent_vector_size = 128
-    num_samples = 200
+    num_samples = 2000
 
     vae_routine = VAE_Routine(
         data_object,
@@ -169,11 +174,14 @@ def main():
     images, reconstructions, labels = vae_routine.train_vae()
     # Check quality of reconstructions:
     print('CHECKING RECONSTRUCTED IMAGES QUALITY')
+    print(f'Number of reconstructions: {len(reconstructions)}')
     vae_routine.check_vae_performance(net, verification_tolerance, reconstructions, labels)
 
-    generated_images = vae_routine.generate_samples()
+
     # Check quality of generated images
     print('CHECKING GENERATED IMAGES QUALITY')
+    generated_images = vae_routine.generate_samples()
+    print(f'Number of reconstructions: {len(generated_images)}')
     vae_routine.check_vae_performance(net, verification_tolerance, generated_images)
 
 if __name__ == '__main__':
