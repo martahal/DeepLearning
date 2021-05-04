@@ -29,10 +29,10 @@ class VAE_Routine():
         self.image_dimensions = (data.test_images.shape[-1], data.test_images.shape[-2], data.test_images.shape[-3])
         self.num_samples = num_samples
         self.batch_size = batch_size
-        self.enc_last_layer_dim =(16,10,10)#(32, 2, 2)# (8, 4, 4)#
+        self.enc_last_layer_dim =(8,10,10)#(32, 2, 2)# (8, 4, 4)#
         self.encoder = Encoder(
             input_shape=self.image_dimensions,
-            num_filters=32,
+            num_filters=16,
             last_conv_layer_dim=self.enc_last_layer_dim,
             output_vector_size=latent_vector_size * 2, # trying this first
             latent_vector_size= latent_vector_size # TODO check this
@@ -60,7 +60,7 @@ class VAE_Routine():
 
     def train_vae(self):
         #self.vae_trainer.load_best_model()
-        #self.vae_trainer.do_VAE_train()
+        self.vae_trainer.do_VAE_train()
         self.plot_vae_training(self.vae_trainer)
 
         # selecting a fixed sample of the test data we like to visualize
@@ -97,11 +97,11 @@ class VAE_Routine():
                 print(f"Accuracy: {100 * accuracy:.2f}%")
         else:
             if coverage != 0.0:
-                predictability = verification_net.check_predictability(
+                predictability, accuracy = verification_net.check_predictability(
                     data=images,
                     tolerance=tolerance
                 )
-                print(f"Predictability: {100 * predictability}%")#:.2f}%")
+                print(f"Predictability: {100 * predictability:.2f}%")#")
 
 
     @staticmethod
@@ -164,10 +164,12 @@ def main():
     # Note, returned images, reconstructions and gen images are np arrays
     images, reconstructions, labels = vae_routine.train_vae()
     # Check quality of reconstructions:
-    vae_routine.check_vae_performance(net, verification_tolerance, reconstructions, images)
+    print('CHECKING RECONSTRUCTED IMAGES QUALITY')
+    vae_routine.check_vae_performance(net, verification_tolerance, reconstructions, labels)
 
     generated_images = vae_routine.generate_samples()
     # Check quality of generated images
+    print('CHECKING GENERATED IMAGES QUALITY')
     vae_routine.check_vae_performance(net, verification_tolerance, generated_images)
 
 if __name__ == '__main__':
