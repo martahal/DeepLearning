@@ -32,7 +32,7 @@ class VAE_Routine():
         self.enc_last_layer_dim = (8, 2, 2)
         self.encoder = Encoder(
             input_shape=self.image_dimensions,
-            num_filters=16,
+            num_filters=128,
             last_conv_layer_dim=self.enc_last_layer_dim,
             output_vector_size=latent_vector_size * 2, # trying this first
             latent_vector_size= latent_vector_size # TODO check this
@@ -105,7 +105,7 @@ class VAE_Routine():
         Z = p.sample(sample_shape=temp_tensor.shape) # Wow, so ugly, but my brain hurts now
         return Z
 def main():
-    #torch.manual_seed(0)
+    torch.manual_seed(0)
 
     batch_size = 16
     data_object = StackedMNISTData(
@@ -122,7 +122,7 @@ def main():
     optimizer= 'adam'
     epochs = 1
 
-    latent_vector_size = 16
+    latent_vector_size = 32
     batch_size = 16
     num_samples = 200
 
