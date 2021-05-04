@@ -29,10 +29,10 @@ class VAE_Routine():
         self.image_dimensions = (data.test_images.shape[-1], data.test_images.shape[-2], data.test_images.shape[-3])
         self.num_samples = num_samples
         self.batch_size = batch_size
-        self.enc_last_layer_dim = (8, 4, 4)#(8, 2, 2)
+        self.enc_last_layer_dim =(32, 2, 2)# (8, 4, 4)#
         self.encoder = Encoder(
             input_shape=self.image_dimensions,
-            num_filters=32,
+            num_filters=128,
             last_conv_layer_dim=self.enc_last_layer_dim,
             output_vector_size=latent_vector_size * 2, # trying this first
             latent_vector_size= latent_vector_size # TODO check this
@@ -122,7 +122,7 @@ def main():
     optimizer= 'adam'
     epochs = 1
 
-    latent_vector_size = 32
+    latent_vector_size = 128
     num_samples = 200
 
     vae_routine = VAE_Routine(
