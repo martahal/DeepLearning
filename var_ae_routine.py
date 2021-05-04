@@ -29,10 +29,10 @@ class VAE_Routine():
         self.image_dimensions = (data.test_images.shape[-1], data.test_images.shape[-2], data.test_images.shape[-3])
         self.num_samples = num_samples
         self.batch_size = batch_size
-        self.enc_last_layer_dim =(32, 2, 2)# (8, 4, 4)#
+        self.enc_last_layer_dim =(16,10,10)#(32, 2, 2)# (8, 4, 4)#
         self.encoder = Encoder(
             input_shape=self.image_dimensions,
-            num_filters=128,
+            num_filters=32,
             last_conv_layer_dim=self.enc_last_layer_dim,
             output_vector_size=latent_vector_size * 2, # trying this first
             latent_vector_size= latent_vector_size # TODO check this
