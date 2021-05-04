@@ -46,7 +46,7 @@ def show_images_and_reconstructions(images, title, labels = None):
         no_channels = images.shape[-1]
 
     # Do the plotting
-    plt.Figure()
+    fig = plt.Figure()
     no_rows = np.ceil(np.sqrt(no_images))
     no_cols = np.ceil(no_images / no_rows)
     for img_idx in range(no_images):
@@ -61,7 +61,8 @@ def show_images_and_reconstructions(images, title, labels = None):
             plt.title(f"Class is {str(int(labels[img_idx])).zfill(no_channels)}")
     plt.savefig(f'figures/{title}.png')
     # Show the thing ...
-    plt.show()
+    #plt.show()
+    plt.close(fig)
 
 def show_vae_generated_img(images, title):
     """
@@ -79,7 +80,7 @@ def show_vae_generated_img(images, title):
         no_channels = images.shape[-1]
 
     # Do the plotting
-    plt.Figure()
+    fig = plt.Figure()
     no_rows = np.ceil(np.sqrt(no_images))
     no_cols = np.ceil(no_images / no_rows)
     for img_idx in range(no_images):
@@ -93,7 +94,8 @@ def show_vae_generated_img(images, title):
 
     plt.savefig(f'figures/{title}.png')
     # Show the thing ...
-    plt.show()
+    #plt.show()
+    plt.close(fig)
 
 def plot_t_sne(latent_vectors_and_classes: tuple):
     latent_vectors = latent_vectors_and_classes[0]
