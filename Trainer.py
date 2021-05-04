@@ -256,6 +256,7 @@ class Trainer:
     def _calculate_reconstruction_loss(self, x_hat, images, log_scale=None):
         if log_scale is not None:
             # Calculate the Gaussian likelihood
+            log_scale = utils.to_cuda(log_scale)
             scale = torch.exp(log_scale)
             mean = x_hat
             p_xz = torch.distributions.Normal(mean, scale)
