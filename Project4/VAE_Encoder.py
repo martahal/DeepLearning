@@ -83,7 +83,7 @@ class Encoder(nn.Module):
         mean, log_var = self.forward(x)
         std = torch.exp(log_var/2)
         #Debugging
-        #ok = distributions.Normal.arg_constraints["scale"].check(std)
+        #ok = distributions.Normal.arg_constraints["loc"].check(std)
         #bad_elements = std[~ok]
         #print(bad_elements)
         #Debugging
