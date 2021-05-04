@@ -36,6 +36,7 @@ class Decoder(nn.Module):
                 stride=(1,1),
                 padding=(1,1)
             ),
+            nn.BatchNorm2d(self.hidden_filters//2),
             #nn.ConvTranspose2d(
             #    in_channels=self.hidden_filters//4,
             #    out_channels=self.hidden_filters//2,
@@ -50,6 +51,7 @@ class Decoder(nn.Module):
                 stride=(3, 3),
                 padding=(1, 1)
             ),
+            nn.BatchNorm2d(self.hidden_filters),
             nn.ConvTranspose2d(
                 in_channels=self.hidden_filters,
                 out_channels=self.reconstructed_channels,
@@ -57,6 +59,7 @@ class Decoder(nn.Module):
                 stride=(3, 3),
                 padding=(1, 1)
             ),
+            nn.BatchNorm2d(self.reconstructed_channels),
             nn.ReLU(),
             nn.Sigmoid() # scale reconstruction between 0 and 1
         )
