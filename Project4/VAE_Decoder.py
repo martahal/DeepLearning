@@ -58,7 +58,7 @@ class Decoder(nn.Module):
                 padding=(1, 1)
             ),
             nn.ReLU(),
-            nn.Sigmoid() # scale reconstruction between 0 and 1
+            #nn.Sigmoid() # scale reconstruction between 0 and 1
         )
 
     def forward(self, latent_vector):
