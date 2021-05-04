@@ -29,10 +29,10 @@ class VAE_Routine():
         self.image_dimensions = (data.test_images.shape[-1], data.test_images.shape[-2], data.test_images.shape[-3])
         self.num_samples = num_samples
         self.batch_size = batch_size
-        self.enc_last_layer_dim = (8, 2, 2)
+        self.enc_last_layer_dim = (8, 4, 4)#(8, 2, 2)
         self.encoder = Encoder(
             input_shape=self.image_dimensions,
-            num_filters=64,
+            num_filters=32,
             last_conv_layer_dim=self.enc_last_layer_dim,
             output_vector_size=latent_vector_size * 2, # trying this first
             latent_vector_size= latent_vector_size # TODO check this
@@ -117,13 +117,12 @@ def main():
         epochs=5)  # gen=data_object, makes sure we test on the same type of data as the model was trained on
     verification_tolerance = 0.8 if data_object.channels == 1 else 0.5
 
-    learning_rate = 1.0e-3
+    learning_rate = 1.0e-4
     loss_function = 'elbo'
     optimizer= 'adam'
     epochs = 1
 
-    latent_vector_size = 8
-    batch_size = 16
+    latent_vector_size = 32
     num_samples = 200
 
     vae_routine = VAE_Routine(
