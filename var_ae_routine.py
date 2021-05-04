@@ -29,7 +29,7 @@ class VAE_Routine():
         self.image_dimensions = (data.test_images.shape[-1], data.test_images.shape[-2], data.test_images.shape[-3])
         self.num_samples = num_samples
         self.batch_size = batch_size
-        self.enc_last_layer_dim = (32, 4, 4)
+        self.enc_last_layer_dim = (64, 2, 2)
         self.encoder = Encoder(
             input_shape=self.image_dimensions,
             num_filters=16,
@@ -105,7 +105,7 @@ class VAE_Routine():
         Z = p.sample(sample_shape=temp_tensor.shape) # Wow, so ugly, but my brain hurts now
         return Z
 def main():
-    torch.manual_seed(0)
+    #torch.manual_seed(0)
 
     batch_size = 16
     data_object = StackedMNISTData(

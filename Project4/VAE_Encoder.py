@@ -41,10 +41,18 @@ class Encoder(nn.Module):
             nn.BatchNorm2d(self.num_filters*2),
             nn.Conv2d(
                 in_channels=self.num_filters*2,
-                out_channels=self.last_conv_layer_dim[0],
-                kernel_size=(3,3),
-                stride=(1,1),
+                out_channels=self.num_filters * 4,
+                kernel_size=(3, 3),
+                stride=(3,3),
                 padding=(1,1)
+            ),
+            nn.BatchNorm2d(self.num_filters * 4),
+            nn.Conv2d(
+                in_channels=self.num_filters * 4,
+                out_channels=self.last_conv_layer_dim[0],
+                kernel_size=(3, 3),
+                stride=(1, 1),
+                padding=(1, 1)
             ),
             nn.ReLU(),
             nn.Flatten(),
