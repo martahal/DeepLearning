@@ -122,7 +122,7 @@ def main():
     optimizer= 'adam'
     epochs = 1
 
-    latent_vector_size = 64
+    latent_vector_size = 16
     batch_size = 16
     num_samples = 200
 

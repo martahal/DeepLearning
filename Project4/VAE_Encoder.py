@@ -56,12 +56,16 @@ class Encoder(nn.Module):
             ),
             nn.ReLU(),
             nn.Flatten(),
-            nn.Linear(
-                in_features=self.last_conv_layer_dim[0] * self.last_conv_layer_dim[1] * self.last_conv_layer_dim[2],
-                out_features=self.output_vector_size),
+            #nn.Linear(
+            #    in_features=self.last_conv_layer_dim[0] * self.last_conv_layer_dim[1] * self.last_conv_layer_dim[2],
+            #    out_features=self.output_vector_size),
         )
-        self.mean_layer = nn.Linear(self.output_vector_size, self.latent_vector_size)
-        self.log_std_layer = nn.Linear(self.output_vector_size, self.latent_vector_size)
+        self.mean_layer = nn.Linear(
+            in_features=self.last_conv_layer_dim[0] * self.last_conv_layer_dim[1] * self.last_conv_layer_dim[2],
+            out_features=self.latent_vector_size)
+        self.log_std_layer = nn.Linear(
+            in_features=self.last_conv_layer_dim[0] * self.last_conv_layer_dim[1] * self.last_conv_layer_dim[2],
+            out_features=self.latent_vector_size)
 
     def forward(self, x):
        """
