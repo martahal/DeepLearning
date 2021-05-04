@@ -60,7 +60,7 @@ class VAE_Routine():
 
     def train_vae(self):
         #self.vae_trainer.load_best_model()
-        self.vae_trainer.do_VAE_train()
+        #self.vae_trainer.do_VAE_train()
         self.plot_vae_training(self.vae_trainer)
 
         # selecting a fixed sample of the test data we like to visualize
@@ -72,12 +72,36 @@ class VAE_Routine():
             batch_size=self.batch_size,
             image_dimensions=self.image_dimensions)
         # checking quality of reproduced images
+        # Returned images are numpy arrays
         return images, reconstructions, labels
 
     def generate_samples(self):
         Z = self.get_latent_vectors(self.vae.encoder, self.num_samples )
         generated_images = utils.generate_images_from_Z(Z, self.vae.decoder, self.image_dimensions, title= "VAE_generated_images")
         return generated_images
+
+    def check_vae_performance(self, verification_net, tolerance, images, labels=None):
+        coverage = verification_net.check_class_coverage(
+            data=images,
+            tolerance=tolerance
+        )
+        print(f"Coverage: {100 * coverage:.2f}%")
+        if labels is not None:
+            if coverage != 0.0:
+                predictability, accuracy = verification_net.check_predictability(
+                    data=images,
+                    correct_labels=labels,
+                    tolerance=tolerance
+                )
+                print(f"Predictability: {100 * predictability:.2f}%")
+                print(f"Accuracy: {100 * accuracy:.2f}%")
+        else:
+            if coverage != 0.0:
+                predictability = verification_net.check_predictability(
+                    data=images,
+                    tolerance=tolerance
+                )
+                print(f"Predictability: {100 * predictability}%")#:.2f}%")
 
 
     @staticmethod
@@ -121,7 +145,7 @@ def main():
     learning_rate = 1.0e-2
     loss_function = 'elbo'
     optimizer= 'adam'
-    epochs = 20
+    epochs = 1
 
     latent_vector_size = 256
     num_samples = 200
@@ -137,8 +161,14 @@ def main():
         batch_size,
         num_samples,
     )
-    vae_routine.train_vae()
+    # Note, returned images, reconstructions and gen images are np arrays
+    images, reconstructions, labels = vae_routine.train_vae()
+    # Check quality of reconstructions:
+    vae_routine.check_vae_performance(net, verification_tolerance, reconstructions, images)
+
     generated_images = vae_routine.generate_samples()
+    # Check quality of generated images
+    vae_routine.check_vae_performance(net, verification_tolerance, generated_images)
 
 if __name__ == '__main__':
     main()

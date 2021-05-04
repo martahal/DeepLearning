@@ -252,34 +252,35 @@ class Trainer:
         return round(average_loss.item(), 4)
 
     def _calculate_vae_loss(self):
-        #elbo_test_loss = 0.
-        elbo = 0.
-        total_kl_div = 0.
-        total_recon_loss = 0.
-        for (images, classes) in self.test_data:
-            images = utils.to_cuda(images)
-            #x_hat, mean, log_std = self.model(images)
-            x_hat, mean, log_std, encoded_x = self.model(images)
+        with torch.no_grad():
+            #elbo_test_loss = 0.
+            elbo = 0.
+            total_kl_div = 0.
+            total_recon_loss = 0.
+            for (images, classes) in self.test_data:
+                images = utils.to_cuda(images)
+                #x_hat, mean, log_std = self.model(images)
+                x_hat, mean, log_std, encoded_x = self.model(images)
 
 
-            #reconstruction_loss = self._calculate_reconstruction_loss(x_hat, images, nn.)
-            reconstruction_loss = self._calculate_reconstruction_loss(x_hat, images,
-                                                                      log_scale=nn.Parameter(torch.Tensor([0.0])))
+                #reconstruction_loss = self._calculate_reconstruction_loss(x_hat, images, nn.)
+                reconstruction_loss = self._calculate_reconstruction_loss(x_hat, images,
+                                                                          log_scale=nn.Parameter(torch.Tensor([0.0])))
 
-            #kl_div = self._calculate_KL_divergence(mean, log_std, z)
-            kl_div = self._calculate_KL_divergence(mean, log_std, encoded_x)
+                #kl_div = self._calculate_KL_divergence(mean, log_std, z)
+                kl_div = self._calculate_KL_divergence(mean, log_std, encoded_x)
 
-            #elbo_test_loss += -1 * (kl_div + reconstruction_loss).mean() / images.shape[0]
-            elbo += (kl_div - reconstruction_loss).mean()#/images.shape[0]
+                #elbo_test_loss += -1 * (kl_div + reconstruction_loss).mean() / images.shape[0]
+                elbo += (kl_div - reconstruction_loss).mean()#/images.shape[0]
 
-            # for tracking kl_div and recon loss:
-            total_kl_div += kl_div.mean()
-            total_recon_loss += reconstruction_loss.mean()
+                # for tracking kl_div and recon loss:
+                total_kl_div += kl_div.mean()
+                total_recon_loss += reconstruction_loss.mean()
 
-        total_kl_div = total_kl_div / len(self.test_data)
-        total_recon_loss = total_recon_loss / len(self.test_data)
+            total_kl_div = total_kl_div / len(self.test_data)
+            total_recon_loss = total_recon_loss / len(self.test_data)
 
-        total_test_loss = elbo/len(self.test_data)
+            total_test_loss = elbo/len(self.test_data)
         return round(total_test_loss.item(), 4), round(total_kl_div.item(), 4), round(total_recon_loss.item(), 4)
         #total_test_loss = elbo_test_loss / len(self.test_data)
         #return round(total_test_loss.item(), 4)
@@ -347,7 +348,7 @@ class Trainer:
             print(
                 f"Could not load best checkpoint. Did not find under: {self.checkpoint_dir}")
             return
-        return self.model.load_state_dict(state_dict)
+        self.model.load_state_dict(state_dict)
 
     def should_early_stop(self):
         """
