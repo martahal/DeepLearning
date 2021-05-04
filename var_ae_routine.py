@@ -59,6 +59,7 @@ class VAE_Routine():
         )
 
     def train_vae(self):
+        #self.vae_trainer.load_best_model()
         self.vae_trainer.do_VAE_train()
         self.plot_vae_training(self.vae_trainer)
 
@@ -117,12 +118,12 @@ def main():
         epochs=5)  # gen=data_object, makes sure we test on the same type of data as the model was trained on
     verification_tolerance = 0.8 if data_object.channels == 1 else 0.5
 
-    learning_rate = 1.0e-4
+    learning_rate = 1.0e-2
     loss_function = 'elbo'
     optimizer= 'adam'
-    epochs = 1
+    epochs = 20
 
-    latent_vector_size = 128
+    latent_vector_size = 256
     num_samples = 200
 
     vae_routine = VAE_Routine(
