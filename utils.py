@@ -109,7 +109,7 @@ def make_vae_reconstructions(vae, vis_data, num_images, batch_size, image_dimens
                                                    title='test_set_vae_reconstructions')
     return np.array(images), np.array(reconstructions), np.array(labels)
 
-def generate_images_from_Z(Z, decoder, image_dimensions):
+def generate_images_from_Z(Z, decoder, image_dimensions, title):
     #Z = torch.from_numpy(Z).float()
     # Transfer to GPU if available
     Z = to_cuda(Z)
@@ -125,7 +125,7 @@ def generate_images_from_Z(Z, decoder, image_dimensions):
     generated_images = generated_images.cpu().detach().numpy()
     labels = None
     number_to_vis = 12
-    visualisations.show_images_and_reconstructions(generated_images[:number_to_vis], labels, title='gen_AE_figures')
+    visualisations.show_images_and_reconstructions(generated_images[:number_to_vis], labels, title=title)
     return generated_images
 
 """

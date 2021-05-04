@@ -79,7 +79,7 @@ class Generative_autoencoder:
     
     def generate_samples(self):
         Z = self.get_latent_vector_and_classes(self.autoencoder.encoder, self.num_samples)#, self.dataloaders)
-        generated_images = utils.generate_images_from_Z(Z, self.autoencoder.decoder, self.image_dimensions)
+        generated_images = utils.generate_images_from_Z(Z, self.autoencoder.decoder, self.image_dimensions, title= "Gen_AE_generated_images")
         return generated_images
 
     def check_autoencoder_performance(self, verification_net, tolerance, images, labels=None):

@@ -75,7 +75,7 @@ class VAE_Routine():
 
     def generate_samples(self):
         Z = self.get_latent_vectors(self.vae.encoder, self.num_samples )
-        generated_images = utils.generate_images_from_Z(Z, self.vae.decoder, self.image_dimensions)
+        generated_images = utils.generate_images_from_Z(Z, self.vae.decoder, self.image_dimensions, title= "VAE_generated_images")
         return generated_images
 
 
