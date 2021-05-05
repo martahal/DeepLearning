@@ -4,6 +4,7 @@ import pathlib
 import torch
 from torch import nn
 import collections
+import numpy as np
 
 class Trainer:
 
@@ -250,6 +251,80 @@ class Trainer:
             average_loss /= len(self.test_data)
 
         return round(average_loss.item(), 4)
+
+    def ae_detect_anomaly_by_loss(self):
+        # validate all images in test data set
+        # make a list of reconstruction losses
+        self.model.eval()
+        images = None
+        recons= None
+        losses = None
+
+        #for i in range(len(self.test_data)):  # iterate over all batches
+        #    for j in range(len(self.test_data[i])):  # iterate over all images in batch
+        with torch.no_grad():
+            for image_batch, label_batch in self.test_data:
+                #image = self.test_data[i][0][j]  # each batch is a tuple of images and labels
+                # make reconstruction
+                # transfer to GPU if possible:
+                image_batch = utils.to_cuda(image_batch)
+                reconstruction_batch, aux = self.model(image_batch)
+                recon_loss = ((image_batch - reconstruction_batch) ** 2).sum(axis=(1, 2, 3))/ (28 * 28) # Divide by image size
+                #transform images and reconstructions to plot them
+                image_batch = image_batch.view(
+                    image_batch.shape[0],
+                    image_batch.shape[2],
+                    image_batch.shape[3],
+                    image_batch.shape[1]
+                )
+                reconstruction_batch = reconstruction_batch.view(
+                    reconstruction_batch.shape[0],
+                    reconstruction_batch.shape[2],
+                    reconstruction_batch.shape[3],
+                    reconstruction_batch.shape[1]
+                )
+
+
+                images = torch.cat([images, image_batch]) if images is not None else image_batch# TODO determine wether to detach or not
+                recons = torch.cat([recons, reconstruction_batch]) if recons is not None else reconstruction_batch
+                losses = torch.cat([losses, recon_loss]) if losses is not None else recon_loss
+        self.model.train()
+        return images.cpu().detach().numpy(), recons.cpu().detach().numpy(), losses.cpu().detach().numpy()
+
+    def vae_detect_anomaly_by_loss(self):
+        self.model.eval()
+        # validate all images in test data set
+        # make a list of reconstruction losses
+        images = None
+        recons= None
+        losses = None
+
+        with torch.no_grad():
+            for image_batch, label_batch in self.test_data:
+                # make reconstruction
+                # transfer to GPU if possible:
+                image_batch = utils.to_cuda(image_batch)
+                reconstruction_batch, mean, log_std, encoded_x = self.model(image_batch)
+                recon_loss = ((image_batch - reconstruction_batch) ** 2).sum(axis=(1, 2, 3))/ (28 * 28) # Divide by image size
+                # transform images and reconstructions to plot them
+                image_batch = image_batch.view(
+                    image_batch.shape[0],
+                    image_batch.shape[2],
+                    image_batch.shape[3],
+                    image_batch.shape[1]
+                )
+                reconstruction_batch = reconstruction_batch.view(
+                    reconstruction_batch.shape[0],
+                    reconstruction_batch.shape[2],
+                    reconstruction_batch.shape[3],
+                    reconstruction_batch.shape[1]
+                )
+                images = torch.cat([images, image_batch]) if images is not None else image_batch
+                recons = torch.cat([recons, reconstruction_batch]) if recons is not None else reconstruction_batch
+                losses = torch.cat([losses, recon_loss]) if losses is not None else recon_loss
+        self.model.train()
+        return images.cpu().detach().numpy(), recons.cpu().detach().numpy(), losses.cpu().detach().numpy()
+
 
     def _calculate_vae_loss(self):
         with torch.no_grad():

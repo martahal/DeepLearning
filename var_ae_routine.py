@@ -65,6 +65,7 @@ class VAE_Routine():
         self.vae_trainer.do_VAE_train()
         self.plot_vae_training(self.vae_trainer, self.enc_last_layer_dim)
 
+    def reconstruct_test_data(self):
         # selecting a fixed sample of the test data we like to visualize
         visualisation_data = self.data[1][:] #self.data[1][:12]
         images, reconstructions, labels = utils.make_vae_reconstructions(
@@ -78,6 +79,18 @@ class VAE_Routine():
         # checking quality of reproduced images
         # Returned images are numpy arrays
         return images, reconstructions, labels
+
+    def anomaly_detection(self, k):
+        # Calculate reconstruction loss (MSE) for test data
+        # plot the k most anomalous images
+        images, reconstructions, losses = self.vae_trainer.vae_detect_anomaly_by_loss()
+
+        worst_indices = np.argsort(losses)[-1:-(k + 1):-1]
+        print("Anomaly loss values:", [losses[index] for index in worst_indices])
+        anomalies = np.array([images[index] for index in worst_indices])
+        visualisations.show_images_and_reconstructions(anomalies, f'VAE_Anomalies_latent_size:{self.latent_vector_size}_lr_{self.vae_trainer.lr}_epochs:{self.vae_trainer.epochs}')
+
+
 
     def generate_samples(self):
         Z = self.get_latent_vectors(self.vae.encoder, self.num_samples )
@@ -140,7 +153,7 @@ class VAE_Routine():
         return Z
 def main():
     torch.manual_seed(1)
-
+    """ GENERATIVE VAE ROUTINE"""
     batch_size = 16
     data_object = StackedMNISTData(
         mode=DataMode.MONO_FLOAT_COMPLETE,
@@ -165,24 +178,43 @@ def main():
         loss_function,
         optimizer,
         epochs,
+#
+        latent_vector_size,
+        batch_size,
+        num_samples,
+    )
+    #vae_routine.train_vae()
+    # Note, returned images, reconstructions and gen images are np arrays
+
+    #images, reconstructions, labels = vae_routine.reconstruct_test_data()
+    ## Check quality of reconstructions:
+    #print('CHECKING RECONSTRUCTED IMAGES QUALITY')
+    #print(f'Number of reconstructions: {len(reconstructions)}')
+    #vae_routine.check_vae_performance(net, verification_tolerance, reconstructions, labels)
+#
+#
+    ## Check quality of generated images
+    #print('CHECKING GENERATED IMAGES QUALITY')
+    #generated_images = vae_routine.generate_samples()
+    #print(f'Number of reconstructions: {len(generated_images)}')
+    #vae_routine.check_vae_performance(net, verification_tolerance, generated_images)
+
+    """ ANOMALY DETECTOR VAE ROUTINE"""
+    data_object = StackedMNISTData(mode=DataMode.MONO_FLOAT_MISSING, default_batch_size=batch_size)
+    number_anom_images_to_show = 16
+    anom_vae = VAE_Routine(
+        data_object,
+        learning_rate,
+        loss_function,
+        optimizer,
+        epochs,
 
         latent_vector_size,
         batch_size,
         num_samples,
     )
-    # Note, returned images, reconstructions and gen images are np arrays
-    images, reconstructions, labels = vae_routine.train_vae()
-    # Check quality of reconstructions:
-    print('CHECKING RECONSTRUCTED IMAGES QUALITY')
-    print(f'Number of reconstructions: {len(reconstructions)}')
-    vae_routine.check_vae_performance(net, verification_tolerance, reconstructions, labels)
-
-
-    # Check quality of generated images
-    print('CHECKING GENERATED IMAGES QUALITY')
-    generated_images = vae_routine.generate_samples()
-    print(f'Number of reconstructions: {len(generated_images)}')
-    vae_routine.check_vae_performance(net, verification_tolerance, generated_images)
+    anom_vae.train_vae()
+    anom_vae.anomaly_detection(number_anom_images_to_show)
 
 if __name__ == '__main__':
     main()
