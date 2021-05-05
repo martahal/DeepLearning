@@ -76,7 +76,7 @@ class Generative_AE_Routine:
             self.autoencoder.load_state_dict(torch.load(pathlib.Path(load_model_path).joinpath("best.ckpt")))
             print(f'Loaded model from {load_model_path}')
         #selecting a fixed sample of the test data we like to visualize
-        visualisation_data = self.data[1][:12]
+        visualisation_data = self.data[1]
         images, reconstructions, labels = utils.make_reconstructions(
             self.autoencoder,
             visualisation_data,
@@ -141,7 +141,7 @@ class Generative_AE_Routine:
                     data=images,
                     tolerance=tolerance
                 )
-                print(f"Predictability: {100 * predictability}%")#:.2f}%")
+                print(f"Predictability: {100 * predictability:.2f}%")
 
     @staticmethod
     def get_latent_vector_and_classes(encoder, n_samples):
@@ -185,7 +185,7 @@ def main():
     autoencoder_optimizer = 'adam'#'SGD'#  # AVAILABLE 'SGD' # #
     autoencoder_epochs = 1  # Optimal for MNIST: 3
 
-    num_samples = 200
+    num_samples = 2000
     latent_vector_size = 64  # recommended for MNIST between 16 and 64
     gen_name = 'Test_gen_AE'
     gen_ae_save_path = f'checkpoints/gen_AE/{gen_name}'
@@ -201,7 +201,7 @@ def main():
         num_samples,
         gen_ae_save_path
     )
-    gen_autoencoder.train_autoencoder()
+    #gen_autoencoder.train_autoencoder()
     images, reconstructions, labels = gen_autoencoder.reconstruct_test_data()
     #Check quality of reconstructions
     #gen_autoencoder.check_autoencoder_performance(net, verification_tolerance, reconstructions, labels)
