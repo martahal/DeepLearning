@@ -361,7 +361,7 @@ class Trainer:
             p_xz = torch.distributions.Normal(mean, scale)
             # probability of image under p(x|z)
             log_pxz = p_xz.log_prob(images)
-            log_pxz = log_pxz.sum(dim=(1, 2, 3))/images.shape[1]* images.shape[2] * images.shape[3] # dividing by image dimensions
+            log_pxz = log_pxz.sum(dim=(1, 2, 3))#/images.shape[1]* images.shape[2] * images.shape[3] # dividing by image shape
             return log_pxz
         else:
             #Calculate log likelihood assuming multivariate Bernoulli distribution
