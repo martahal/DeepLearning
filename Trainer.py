@@ -137,33 +137,9 @@ class Trainer:
         elbo = kl_div - reconstruction_loss
         elbo = elbo.mean()
 
-
         # For tracking kl_div and reconstruction loss individually:
         kl_div = kl_div.mean()
         reconstruction_loss = reconstruction_loss.mean()
-
-        #total_recon_loss = reconstruction_loss/images.shape[0]
-        #
-        #mu, log_variance = self.model.mu_layer(encoded_x), self.model.variance_layer(encoded_x)  # TODO Why is this called log_var?
-        #sigma = torch.exp(log_variance / 2)
-        #q = torch.distributions.Normal(mu, sigma)
-        #z = q.rsample()
-#
-        ## Make reconstructions through decoder
-        #x_hat = self.model.decoder(z)
-#
-        ## Get Gaussian likelihood reconstruction loss
-        #reconstruction_loss = self._calculate_reconstruction_loss(x_hat, self.model.log_scale, images)
-#
-        ## Get KL Divergence
-        #kl_div = self._calculate_KL_divergence(mean, log_std) # z, mu, sigma)
-
-
-
-        #
-        #elbo = kl_div - reconstruction_loss
-        #elbo = elbo.mean() # TODO why?
-#
 
         ## Backward pass
         elbo.backward()
@@ -172,7 +148,7 @@ class Trainer:
         # Reset gradients
         self.optimizer.zero_grad()
         return elbo, kl_div, reconstruction_loss
-        #return total_elbo_loss, total_kl_div, total_recon_loss
+
 
     def _autoencoder_training_step(self, images, classes):
         """
@@ -361,7 +337,7 @@ class Trainer:
             p_xz = torch.distributions.Normal(mean, scale)
             # probability of image under p(x|z)
             log_pxz = p_xz.log_prob(images)
-            log_pxz = log_pxz.sum(dim=(1, 2, 3))/(images.shape[1]* images.shape[2] * images.shape[3]) # dividing by image shape
+            log_pxz = log_pxz.sum(dim=(1, 2, 3))
             return log_pxz
         else:
             #Calculate log likelihood assuming multivariate Bernoulli distribution

@@ -184,7 +184,7 @@ class VAE_Routine():
 def main():
     torch.manual_seed(1)
     """ GENERATIVE VAE ROUTINE"""
-    batch_size = 16
+    batch_size = 256
     data_object = StackedMNISTData(
         mode=DataMode.MONO_FLOAT_COMPLETE,
         default_batch_size=batch_size)
@@ -215,10 +215,10 @@ def main():
         num_samples,
         gen_vae_save_path
     )
-    vae_routine.train_vae()
+    #vae_routine.train_vae()
     # Note, returned images, reconstructions and gen images are np arrays
 
-    #images, reconstructions, labels = vae_routine.reconstruct_test_data()
+    images, reconstructions, labels = vae_routine.reconstruct_test_data()
     ## Check quality of reconstructions:
     #print('CHECKING RECONSTRUCTED IMAGES QUALITY')
     #print(f'Number of reconstructions: {len(reconstructions)}')

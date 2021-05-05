@@ -57,17 +57,27 @@ def make_reconstructions(autoencoder, vis_data, num_images, batch_size, image_di
     images = []
     reconstructions = []
     labels = []
-    for image, label in vis_data:
+    for image_batch, label in vis_data:
         #Make reconstruction
-        image = to_cuda(image)
-        reconstruction_batch, aux = autoencoder(image)
+        image_batch = to_cuda(image_batch)
+        reconstruction_batch, aux = autoencoder(image_batch)
         # Convert from tensor to numpy
-        image = image.view(batch_size, image_dimensions[1], image_dimensions[2], image_dimensions[0])
-        image = image.cpu().detach().numpy()
+        image_batch = image_batch.view(
+            image_batch.shape[0],
+            image_batch.shape[2],
+            image_batch.shape[3],
+            image_batch.shape[1]
+        )
+        image_batch = image_batch.cpu().detach().numpy()
         label = label.cpu().detach().numpy()
-        reconstruction_batch = reconstruction_batch.view(batch_size, image_dimensions[1], image_dimensions[2], image_dimensions[0])
+        reconstruction_batch = reconstruction_batch.view(
+            reconstruction_batch.shape[0],
+            reconstruction_batch.shape[2],
+            reconstruction_batch.shape[3],
+            reconstruction_batch.shape[1]
+        )
         reconstruction_batch = reconstruction_batch.cpu().detach().numpy()
-        images.extend(image)
+        images.extend(image_batch)
         labels.extend(label)
         reconstructions.extend(reconstruction_batch)
     vis_images = images[:num_images]
@@ -84,21 +94,27 @@ def make_vae_reconstructions(vae, vis_data, num_images, batch_size, image_dimens
     images = []
     reconstructions = []
     labels = []
-    for image, label in vis_data:
+    for image_batch, label in vis_data:
         # Make reconstruction
-        image = to_cuda(image)
-        reconstruction_batch, aux1, aux2, aux_3 = vae(image)
+        image_batch = to_cuda(image_batch)
+        reconstruction_batch, aux1, aux2, aux_3 = vae(image_batch)
         # Convert from tensor to numpy
-        image = image.view(batch_size, image_dimensions[1], image_dimensions[2], image_dimensions[0])
-        image = image.cpu().detach().numpy()
+        image_batch = image_batch.view(
+            image_batch.shape[0],
+            image_batch.shape[2],
+            image_batch.shape[3],
+            image_batch.shape[1]
+        )
+        image_batch = image_batch.cpu().detach().numpy()
         label = label.cpu().detach().numpy()
         reconstruction_batch = reconstruction_batch.view(
-            batch_size,
-            image_dimensions[1],
-            image_dimensions[2],
-            image_dimensions[0])
+            reconstruction_batch.shape[0],
+            reconstruction_batch.shape[2],
+            reconstruction_batch.shape[3],
+            reconstruction_batch.shape[1]
+        )
         reconstruction_batch = reconstruction_batch.cpu().detach().numpy()
-        images.extend(image)
+        images.extend(image_batch)
         labels.extend(label)
         reconstructions.extend(reconstruction_batch)
     vis_images = images[:num_images]

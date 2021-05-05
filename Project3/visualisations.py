@@ -28,6 +28,7 @@ def plot_metric(metric_dict, label, averaged_plot=True, n=8):
         plt.fill_between(steps, mean_values - std_values,
                          mean_values + std_values,
                          alpha=0.3, label= f'{label} variance over {n} points')
+        plt.show()
 
 
 def show_images_and_reconstructions(images, title, labels = None):
@@ -94,7 +95,7 @@ def show_vae_generated_img(images, title):
 
     plt.savefig(f'figures/{title}.png')
     # Show the thing ...
-    #plt.show()
+    plt.show()
     plt.close(fig)
 
 def plot_t_sne(latent_vectors_and_classes: tuple):
