@@ -183,10 +183,10 @@ def main():
         batch_size,
         num_samples,
     )
-    vae_routine.train_vae()
+    #vae_routine.train_vae()
     # Note, returned images, reconstructions and gen images are np arrays
 
-    images, reconstructions, labels = vae_routine.reconstruct_test_data()
+    #images, reconstructions, labels = vae_routine.reconstruct_test_data()
     ## Check quality of reconstructions:
     #print('CHECKING RECONSTRUCTED IMAGES QUALITY')
     #print(f'Number of reconstructions: {len(reconstructions)}')
@@ -213,7 +213,7 @@ def main():
         batch_size,
         num_samples,
     )
-    #images, reconstructions, labels = vae_routine.train_vae()
+    anom_vae.train_vae()
     anom_vae.anomaly_detection(number_anom_images_to_show)
 
 if __name__ == '__main__':
