@@ -201,7 +201,7 @@ def main():
 
     """ ANOMALY DETECTOR VAE ROUTINE"""
     data_object = StackedMNISTData(mode=DataMode.MONO_FLOAT_MISSING, default_batch_size=batch_size)
-    number_anom_images_to_show = 6
+    number_anom_images_to_show = 16
     anom_vae = VAE_Routine(
         data_object,
         learning_rate,

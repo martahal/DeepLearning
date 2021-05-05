@@ -192,7 +192,7 @@ def main():
 
     """ ANOMALY DETECTOR AUTOENCODER ROUTINE"""
     data_object = StackedMNISTData(mode=DataMode.MONO_FLOAT_MISSING, default_batch_size=batch_size)
-    number_anom_images_to_show = 6
+    number_anom_images_to_show = 16
     anom_autoencoder = Generative_autoencoder(
         data_object,
         autoencoder_learning_rate,
