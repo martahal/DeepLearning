@@ -215,7 +215,7 @@ def main():
         num_samples,
         gen_vae_save_path
     )
-    #vae_routine.train_vae()
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        vae_routine.train_vae()
     # Note, returned images, reconstructions and gen images are np arrays
 
     #images, reconstructions, labels = vae_routine.reconstruct_test_data()
@@ -232,25 +232,25 @@ def main():
     #vae_routine.check_vae_performance(net, verification_tolerance, generated_images)
 
     """ ANOMALY DETECTOR VAE ROUTINE"""
-    data_object = StackedMNISTData(mode=DataMode.MONO_FLOAT_MISSING, default_batch_size=batch_size)
-    number_anom_images_to_show = 16
-    anom_name = 'Test_anom_VAE'
-    anom_vae_save_path = f'checkpoints/anom_VAE/{anom_name}'
-    anom_vae = VAE_Routine(
-        data_object,
-        learning_rate,
-        loss_function,
-        optimizer,
-        epochs,
-
-        latent_vector_size,
-        batch_size,
-        num_samples,
-        anom_vae_save_path
-
-    )
-    anom_vae.train_vae()
-    anom_vae.anomaly_detection(number_anom_images_to_show)
+    #data_object = StackedMNISTData(mode=DataMode.MONO_FLOAT_MISSING, default_batch_size=batch_size)
+    #number_anom_images_to_show = 16
+    #anom_name = 'Test_anom_VAE'
+    #anom_vae_save_path = f'checkpoints/anom_VAE/{anom_name}'
+    #anom_vae = VAE_Routine(
+    #    data_object,
+    #    learning_rate,
+    #    loss_function,
+    #    optimizer,
+    #    epochs,
+#
+    #    latent_vector_size,
+    #    batch_size,
+    #    num_samples,
+    #    anom_vae_save_path
+#
+    #)
+    #anom_vae.train_vae()
+    #anom_vae.anomaly_detection(number_anom_images_to_show)
 
 if __name__ == '__main__':
     main()
