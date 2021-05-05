@@ -32,7 +32,7 @@ class VAE_Routine():
         self.image_dimensions = (data.test_images.shape[-1], data.test_images.shape[-2], data.test_images.shape[-3])
         self.num_samples = num_samples
         self.batch_size = batch_size
-        self.enc_last_layer_dim = (8, 4, 4) #(8,10,10) #(32, 2, 2)#
+        self.enc_last_layer_dim = (8,10,10) #(32, 2, 2)#(8, 4, 4) #
         self.latent_vector_size = latent_vector_size
 
 
