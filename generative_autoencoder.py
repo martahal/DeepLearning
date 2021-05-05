@@ -163,7 +163,7 @@ def main():
     autoencoder_learning_rate = 0.0002
     autoencoder_loss_function = 'MSE' #'binary_cross_entropy'  # AVAILABLE 'binary_cross_entropy'
     autoencoder_optimizer = 'adam'#'SGD'#  # AVAILABLE 'SGD' # #
-    autoencoder_epochs = 10  # Optimal for MNIST: 3
+    autoencoder_epochs = 1  # Optimal for MNIST: 3
 
     num_samples = 200
     latent_vector_size = 64  # recommended for MNIST between 16 and 64
@@ -204,7 +204,7 @@ def main():
         batch_size,
         num_samples,
     )
-    #images, reconstructions, labels = anom_autoencoder.train_autoencoder()
+    anom_autoencoder.train_autoencoder()
 
     anom_autoencoder.anomaly_detection(number_anom_images_to_show)
 if __name__ == '__main__':

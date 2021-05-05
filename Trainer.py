@@ -255,6 +255,7 @@ class Trainer:
     def ae_detect_anomaly_by_loss(self):
         # validate all images in test data set
         # make a list of reconstruction losses
+        self.model.eval()
         images = None
         recons= None
         losses = None
@@ -287,10 +288,11 @@ class Trainer:
                 images = torch.cat([images, image_batch]) if images is not None else image_batch# TODO determine wether to detach or not
                 recons = torch.cat([recons, reconstruction_batch]) if recons is not None else reconstruction_batch
                 losses = torch.cat([losses, recon_loss]) if losses is not None else recon_loss
-
+        self.model.train()
         return images.cpu().detach().numpy(), recons.cpu().detach().numpy(), losses.cpu().detach().numpy()
 
     def vae_detect_anomaly_by_loss(self):
+        self.model.eval()
         # validate all images in test data set
         # make a list of reconstruction losses
         images = None
@@ -320,7 +322,7 @@ class Trainer:
                 images = torch.cat([images, image_batch]) if images is not None else image_batch
                 recons = torch.cat([recons, reconstruction_batch]) if recons is not None else reconstruction_batch
                 losses = torch.cat([losses, recon_loss]) if losses is not None else recon_loss
-
+        self.model.train()
         return images.cpu().detach().numpy(), recons.cpu().detach().numpy(), losses.cpu().detach().numpy()
 
 
