@@ -17,6 +17,7 @@ class Trainer:
                  loss_function,
                  optimizer,
                  early_stop_count,
+                 model_save_path,
                  is_vae = False,
                  ):
 
@@ -60,7 +61,7 @@ class Trainer:
         print(self.model)
 
 
-        self.checkpoint_dir = pathlib.Path("checkpoints")
+        self.checkpoint_dir = pathlib.Path(model_save_path)
         self.early_stop_count = early_stop_count
 
 

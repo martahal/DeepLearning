@@ -26,7 +26,7 @@ class Generative_autoencoder:
             latent_vector_size: int,
             batch_size: int,
             num_samples: int,
-
+            save_path: str
 
     ):
         self.data = utils.get_data_to_tensors(data, batch_size)
@@ -58,7 +58,8 @@ class Generative_autoencoder:
             data=self.data,
             loss_function=autoencoder_loss_function,
             optimizer=autoencoder_optimizer,
-            early_stop_count = 4
+            early_stop_count = 4,
+            model_save_path=save_path,
         )
 
     def train_autoencoder(self):
@@ -167,18 +168,20 @@ def main():
 
     num_samples = 200
     latent_vector_size = 64  # recommended for MNIST between 16 and 64
+    gen_name = 'Test_gen_AE'
+    gen_ae_save_path = f'checkpoints/gen_AE/{gen_name}'
+    gen_autoencoder = Generative_autoencoder(
+        data_object,
+        autoencoder_learning_rate,
+        autoencoder_loss_function,
+        autoencoder_optimizer,
+        autoencoder_epochs,
 
-    #gen_autoencoder = Generative_autoencoder(
-    #    data_object,
-    #    autoencoder_learning_rate,
-    #    autoencoder_loss_function,
-    #    autoencoder_optimizer,
-    #    autoencoder_epochs,
-    #    # TODO add path to model weights as argument
-    #    latent_vector_size,
-    #    batch_size,
-    #    num_samples,
-    #)
+        latent_vector_size,
+        batch_size,
+        num_samples,
+        gen_ae_save_path
+    )
     #gen_autoencoder.train_autoencoder()
     #images, reconstructions, labels = gen_autoencoder.reconstruct_test_data():
     ##Check quality of reconstructions
@@ -193,6 +196,8 @@ def main():
     """ ANOMALY DETECTOR AUTOENCODER ROUTINE"""
     data_object = StackedMNISTData(mode=DataMode.MONO_FLOAT_MISSING, default_batch_size=batch_size)
     number_anom_images_to_show = 16
+    anom_name = 'Test_anom_AE'
+    anom_ae_save_path = f'checkpoints/anom_AE/{anom_name}/'
     anom_autoencoder = Generative_autoencoder(
         data_object,
         autoencoder_learning_rate,
@@ -203,6 +208,7 @@ def main():
         latent_vector_size,
         batch_size,
         num_samples,
+        anom_ae_save_path
     )
     anom_autoencoder.train_autoencoder()
 

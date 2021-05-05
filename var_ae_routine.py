@@ -24,6 +24,7 @@ class VAE_Routine():
             latent_vector_size: int,
             batch_size: int,
             num_samples: int,
+            save_path: str
     ):
         self.data = utils.get_data_to_tensors(data, batch_size)
         self.image_dimensions = (data.test_images.shape[-1], data.test_images.shape[-2], data.test_images.shape[-3])
@@ -31,6 +32,8 @@ class VAE_Routine():
         self.batch_size = batch_size
         self.enc_last_layer_dim = (8, 4, 4)#(8,10,10)#(32, 2, 2)#
         self.latent_vector_size = latent_vector_size
+
+
 
         self.encoder = Encoder(
             input_shape=self.image_dimensions,
@@ -57,12 +60,14 @@ class VAE_Routine():
             loss_function=loss_function,
             optimizer=optimizer,
             early_stop_count=4,
+            model_save_path=save_path,
             is_vae=True
         )
 
     def train_vae(self):
         #self.vae_trainer.load_best_model()
         self.vae_trainer.do_VAE_train()
+
         self.plot_vae_training(self.vae_trainer, self.enc_last_layer_dim)
 
     def reconstruct_test_data(self):
@@ -171,7 +176,8 @@ def main():
 
     latent_vector_size = 128
     num_samples = 2000
-
+    gen_name = 'Test_gen_VAE'
+    gen_vae_save_path = f'checkpoints/gen_VAE/{gen_name}'
     vae_routine = VAE_Routine(
         data_object,
         learning_rate,
@@ -202,6 +208,8 @@ def main():
     """ ANOMALY DETECTOR VAE ROUTINE"""
     data_object = StackedMNISTData(mode=DataMode.MONO_FLOAT_MISSING, default_batch_size=batch_size)
     number_anom_images_to_show = 16
+    anom_name = 'Test_anom_VAE'
+    anom_vae_save_path = f'checkpoints/anom_VAE/{anom_name}'
     anom_vae = VAE_Routine(
         data_object,
         learning_rate,
@@ -212,6 +220,8 @@ def main():
         latent_vector_size,
         batch_size,
         num_samples,
+        anom_vae_save_path
+
     )
     anom_vae.train_vae()
     anom_vae.anomaly_detection(number_anom_images_to_show)
