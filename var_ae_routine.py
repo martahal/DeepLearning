@@ -215,7 +215,7 @@ def main():
         num_samples,
         gen_vae_save_path
     )
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        vae_routine.train_vae()
+    vae_routine.train_vae()
     # Note, returned images, reconstructions and gen images are np arrays
 
     #images, reconstructions, labels = vae_routine.reconstruct_test_data()
