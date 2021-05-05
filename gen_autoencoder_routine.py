@@ -41,7 +41,7 @@ class Generative_AE_Routine:
         self.encoder = Encoder(
             input_shape=self.image_dimensions,
             num_filters=16,
-            last_conv_layer_dim=(32, 4, 4),
+            last_conv_layer_dim= (16,10, 10), #(32, 4, 4),
             output_vector_size=latent_vector_size)
 
         self.decoder = Decoder(
