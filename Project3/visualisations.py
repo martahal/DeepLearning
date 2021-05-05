@@ -61,7 +61,7 @@ def show_images_and_reconstructions(images, title, labels = None):
             plt.title(f"Class is {str(int(labels[img_idx])).zfill(no_channels)}")
     plt.savefig(f'figures/{title}.png')
     # Show the thing ...
-    #plt.show()
+    plt.show()
     plt.close(fig)
 
 def show_vae_generated_img(images, title):

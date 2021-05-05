@@ -82,7 +82,9 @@ class Generative_AE_Routine:
             visualisation_data,
             num_images=12,
             batch_size=self.batch_size,
-            image_dimensions=self.image_dimensions)
+            image_dimensions=self.image_dimensions,
+            title=f'AE_z_size:{self.latent_vector_size}_lr_{self.autoencoder_trainer.lr}_epochs:{self.autoencoder_trainer.epochs}'
+        )
         # checking quality of reproduced images
         return images, reconstructions, labels
 
@@ -199,36 +201,36 @@ def main():
         num_samples,
         gen_ae_save_path
     )
-    #gen_autoencoder.train_autoencoder()
-    #images, reconstructions, labels = gen_autoencoder.reconstruct_test_data():
-    ##Check quality of reconstructions
+    gen_autoencoder.train_autoencoder()
+    images, reconstructions, labels = gen_autoencoder.reconstruct_test_data()
+    #Check quality of reconstructions
     #gen_autoencoder.check_autoencoder_performance(net, verification_tolerance, reconstructions, labels)
-
+#
     ##Generate samples
     #generated_images = gen_autoencoder.generate_samples()
-
+#
     ##check quality of generated images
     #gen_autoencoder.check_autoencoder_performance(net, verification_tolerance, generated_images)
-
-    """ ANOMALY DETECTOR AUTOENCODER ROUTINE"""
-    data_object = StackedMNISTData(mode=DataMode.MONO_FLOAT_MISSING, default_batch_size=batch_size)
-    number_anom_images_to_show = 16
-    anom_name = 'Test_anom_AE'
-    anom_ae_save_path = f'checkpoints/anom_AE/{anom_name}/'
-    anom_autoencoder = Generative_AE_Routine(
-        data_object,
-        autoencoder_learning_rate,
-        autoencoder_loss_function,
-        autoencoder_optimizer,
-        autoencoder_epochs,
-        # TODO add path to model weights as argument
-        latent_vector_size,
-        batch_size,
-        num_samples,
-        anom_ae_save_path
-    )
-    anom_autoencoder.train_autoencoder()
-
-    anom_autoencoder.anomaly_detection(number_anom_images_to_show)
+#
+    #""" ANOMALY DETECTOR AUTOENCODER ROUTINE"""
+    #data_object = StackedMNISTData(mode=DataMode.MONO_FLOAT_MISSING, default_batch_size=batch_size)
+    #number_anom_images_to_show = 16
+    #anom_name = 'Test_anom_AE'
+    #anom_ae_save_path = f'checkpoints/anom_AE/{anom_name}/'
+    #anom_autoencoder = Generative_AE_Routine(
+    #    data_object,
+    #    autoencoder_learning_rate,
+    #    autoencoder_loss_function,
+    #    autoencoder_optimizer,
+    #    autoencoder_epochs,
+    #
+    #    latent_vector_size,
+    #    batch_size,
+    #    num_samples,
+    #    anom_ae_save_path
+    #)
+    #anom_autoencoder.train_autoencoder()
+#
+    #anom_autoencoder.anomaly_detection(number_anom_images_to_show)
 if __name__ == '__main__':
     main()

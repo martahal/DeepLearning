@@ -1,14 +1,7 @@
-from Project4.VAE import VAE
-from Project4.VAE_Encoder import Encoder
-from Project4.VAE_Decoder import Decoder
+
 from Project4.verification_net import VerificationNet
-from Project3 import visualisations
-from Trainer import Trainer
 from Project4.stacked_mnist import StackedMNISTData, DataMode
-import utils
 from var_ae_routine import VAE_Routine
-import matplotlib.pyplot as plt
-import numpy as np
 import torch
 
 

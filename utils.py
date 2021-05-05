@@ -51,7 +51,7 @@ def normalize_images(images):
     return norm_images
 
 
-def make_reconstructions(autoencoder, vis_data, num_images, batch_size, image_dimensions):
+def make_reconstructions(autoencoder, vis_data, num_images, batch_size, image_dimensions, title):
     # Extremely inefficient way of doing this
     # Forward all images, then selecting the ones i want to visualize
     images = []
@@ -74,8 +74,9 @@ def make_reconstructions(autoencoder, vis_data, num_images, batch_size, image_di
     vis_reconstructions = reconstructions[:num_images]
     vis_labels = labels[:num_images]
 #
-    visualisations.show_images_and_reconstructions(np.array(vis_images), vis_labels, title='test_set_images')
-    visualisations.show_images_and_reconstructions(np.array(vis_reconstructions), vis_labels, title='test_set_reconstructions')
+    visualisations.show_images_and_reconstructions(np.array(vis_images), title, vis_labels)
+    visualisations.show_images_and_reconstructions(np.array(vis_reconstructions),
+                                                   f'{title}_reconstructions', vis_labels)
     return np.array(images), np.array(reconstructions), np.array(labels)
 
 
