@@ -11,6 +11,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 import torch
 
+import pathlib
+
 
 class VAE_Routine():
     def __init__(
@@ -49,7 +51,7 @@ class VAE_Routine():
             hidden_filters=self.encoder.num_filters,
             output_size=self.image_dimensions)
 
-        self.vae = VAE(self.encoder, self.decoder, latent_vector_size)
+        self.vae = VAE(self.encoder, self.decoder)
 
         self.vae_trainer = Trainer(
             batch_size=batch_size,
@@ -65,12 +67,18 @@ class VAE_Routine():
         )
 
     def train_vae(self):
-        #self.vae_trainer.load_best_model()
+
         self.vae_trainer.do_VAE_train()
 
         self.plot_vae_training(self.vae_trainer, self.enc_last_layer_dim)
 
-    def reconstruct_test_data(self):
+    def reconstruct_test_data(self, load_model_path=None):
+        if load_model_path is not None:
+            # self.vae_trainer.load_best_model() Does not return the model but sets the self.model in trainer to be best model
+            # see if we can do:
+            self.vae.load_state_dict(torch.load(pathlib.Path(load_model_path).joinpath("best.ckpt")))
+            print(f'Loaded model from {load_model_path}')
+
         # selecting a fixed sample of the test data we like to visualize
         visualisation_data = self.data[1][:] #self.data[1][:12]
         images, reconstructions, labels = utils.make_vae_reconstructions(
@@ -85,7 +93,13 @@ class VAE_Routine():
         # Returned images are numpy arrays
         return images, reconstructions, labels
 
-    def anomaly_detection(self, k):
+    def anomaly_detection(self, k, load_model_path=None):
+        if load_model_path is not None:
+            # self.vae_trainer.load_best_model() Does not return the model but sets the self.model in trainer to be best model
+            # see if we can do:
+            self.vae.load_state_dict(torch.load(pathlib.Path(load_model_path).joinpath("best.ckpt")))
+            print(f'Loaded model from {load_model_path}')
+
         # Calculate reconstruction loss (MSE) for test data
         # plot the k most anomalous images
         images, reconstructions, losses = self.vae_trainer.vae_detect_anomaly_by_loss()
@@ -97,7 +111,12 @@ class VAE_Routine():
 
 
 
-    def generate_samples(self):
+    def generate_samples(self, load_model_path=None):
+        if load_model_path is not None:
+            # self.vae_trainer.load_best_model() Does not return the model but sets the self.model in trainer to be best model
+            # see if we can do:
+            self.vae.load_state_dict(torch.load(pathlib.Path(load_model_path).joinpath("best.ckpt")))
+            print(f'Loaded model from {load_model_path}')
         Z = self.get_latent_vectors(self.vae.encoder, self.num_samples )
         generated_images = utils.generate_images_from_Z(
             Z,
@@ -107,7 +126,13 @@ class VAE_Routine():
         )
         return generated_images
 
-    def check_vae_performance(self, verification_net, tolerance, images, labels=None):
+    def check_vae_performance(self, verification_net, tolerance, images, labels=None, load_model_path=None):
+        if load_model_path is not None:
+            # self.vae_trainer.load_best_model() Does not return the model but sets the self.model in trainer to be best model
+            # see if we can do:
+            self.vae.load_state_dict(torch.load(pathlib.Path(load_model_path).joinpath("best.ckpt")))
+            print(f'Loaded model from {load_model_path}')
+
         coverage = verification_net.check_class_coverage(
             data=images,
             tolerance=tolerance
@@ -188,6 +213,7 @@ def main():
         latent_vector_size,
         batch_size,
         num_samples,
+        gen_vae_save_path
     )
     #vae_routine.train_vae()
     # Note, returned images, reconstructions and gen images are np arrays

@@ -4,7 +4,7 @@ from Project4.stacked_mnist import StackedMNISTData
 from Project4.verification_net import VerificationNet
 
 class VAE(nn.Module):
-    def __init__(self, encoder, decoder, latent_vector_size):
+    def __init__(self, encoder, decoder):
         super().__init__()
         # Defining encoder and decoder:
         self.encoder = encoder  # The encoder is no longer outputting to the latent vector but to the mean and variance layers

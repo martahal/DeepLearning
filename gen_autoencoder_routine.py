@@ -11,8 +11,10 @@ import torch
 import matplotlib.pyplot as plt
 import numpy as np
 
+import pathlib
 
-class Generative_autoencoder:
+
+class Generative_AE_Routine:
 
     def __init__(
             self,
@@ -67,7 +69,12 @@ class Generative_autoencoder:
         self.autoencoder_trainer.do_autoencoder_train()
         self.plot_autoencoder_training(self.autoencoder_trainer)
 
-    def reconstruct_test_data(self):
+    def reconstruct_test_data(self, load_model_path=None):
+        if load_model_path is not None:
+            # self.vae_trainer.load_best_model() Does not return the model but sets the self.model in trainer to be best model
+            # see if we can do:
+            self.autoencoder.load_state_dict(torch.load(pathlib.Path(load_model_path).joinpath("best.ckpt")))
+            print(f'Loaded model from {load_model_path}')
         #selecting a fixed sample of the test data we like to visualize
         visualisation_data = self.data[1][:12]
         images, reconstructions, labels = utils.make_reconstructions(
@@ -79,7 +86,12 @@ class Generative_autoencoder:
         # checking quality of reproduced images
         return images, reconstructions, labels
 
-    def anomaly_detection(self, k):
+    def anomaly_detection(self, k, load_model_path=None):
+        if load_model_path is not None:
+            # self.vae_trainer.load_best_model() Does not return the model but sets the self.model in trainer to be best model
+            # see if we can do:
+            self.autoencoder.load_state_dict(torch.load(pathlib.Path(load_model_path).joinpath("best.ckpt")))
+            print(f'Loaded model from {load_model_path}')
         # Calculate reconstruction loss (MSE) for test data
         # plot the k most anomalous images
         images, reconstructions, losses = self.autoencoder_trainer.ae_detect_anomaly_by_loss()
@@ -91,12 +103,22 @@ class Generative_autoencoder:
 
 
 
-    def generate_samples(self):
+    def generate_samples(self, load_model_path=None):
+        if load_model_path is not None:
+            # self.vae_trainer.load_best_model() Does not return the model but sets the self.model in trainer to be best model
+            # see if we can do:
+            self.autoencoder.load_state_dict(torch.load(pathlib.Path(load_model_path).joinpath("best.ckpt")))
+            print(f'Loaded model from {load_model_path}')
         Z = self.get_latent_vector_and_classes(self.autoencoder.encoder, self.num_samples)#, self.dataloaders)
         generated_images = utils.generate_images_from_Z(Z, self.autoencoder.decoder, self.image_dimensions, title= "Gen_AE_generated_images")
         return generated_images
 
-    def check_autoencoder_performance(self, verification_net, tolerance, images, labels=None):
+    def check_autoencoder_performance(self, verification_net, tolerance, images, labels=None, load_model_path=None):
+        if load_model_path is not None:
+            # self.vae_trainer.load_best_model() Does not return the model but sets the self.model in trainer to be best model
+            # see if we can do:
+            self.autoencoder.load_state_dict(torch.load(pathlib.Path(load_model_path).joinpath("best.ckpt")))
+            print(f'Loaded model from {load_model_path}')
         coverage = verification_net.check_class_coverage(
             data=images,
             tolerance=tolerance
@@ -118,11 +140,6 @@ class Generative_autoencoder:
                     tolerance=tolerance
                 )
                 print(f"Predictability: {100 * predictability}%")#:.2f}%")
-
-
-        
-
-
 
     @staticmethod
     def get_latent_vector_and_classes(encoder, n_samples):
@@ -170,7 +187,7 @@ def main():
     latent_vector_size = 64  # recommended for MNIST between 16 and 64
     gen_name = 'Test_gen_AE'
     gen_ae_save_path = f'checkpoints/gen_AE/{gen_name}'
-    gen_autoencoder = Generative_autoencoder(
+    gen_autoencoder = Generative_AE_Routine(
         data_object,
         autoencoder_learning_rate,
         autoencoder_loss_function,
@@ -198,7 +215,7 @@ def main():
     number_anom_images_to_show = 16
     anom_name = 'Test_anom_AE'
     anom_ae_save_path = f'checkpoints/anom_AE/{anom_name}/'
-    anom_autoencoder = Generative_autoencoder(
+    anom_autoencoder = Generative_AE_Routine(
         data_object,
         autoencoder_learning_rate,
         autoencoder_loss_function,
