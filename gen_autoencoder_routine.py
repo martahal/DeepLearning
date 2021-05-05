@@ -151,7 +151,7 @@ class Generative_AE_Routine:
         :param n_samples: number of samples from Z
         :return: a random sample of Z from the standard normal distribution
         """
-        p = torch.distributions.Normal(torch.zeros(encoder.latent_vector_size), torch.ones(encoder.latent_vector_size))
+        p = torch.distributions.Normal(torch.zeros(encoder.output_vector_size), torch.ones(encoder.output_vector_size))
         temp_tensor = torch.ones(n_samples)
         Z = p.sample(sample_shape=temp_tensor.shape)  # Wow, so ugly, but my brain hurts now
         return Z
