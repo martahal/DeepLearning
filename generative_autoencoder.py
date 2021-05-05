@@ -33,6 +33,7 @@ class Generative_autoencoder:
         self.image_dimensions = (data.test_images.shape[-1], data.test_images.shape[-2], data.test_images.shape[-3])
         self.num_samples = num_samples
         self.batch_size = batch_size
+        self.latent_vector_size = latent_vector_size
 
 
         self.encoder = Encoder(
@@ -65,7 +66,7 @@ class Generative_autoencoder:
         self.autoencoder_trainer.do_autoencoder_train()
         self.plot_autoencoder_training(self.autoencoder_trainer)
 
-
+    def reconstruct_test_data(self):
         #selecting a fixed sample of the test data we like to visualize
         visualisation_data = self.data[1][:12]
         images, reconstructions, labels = utils.make_reconstructions(
@@ -76,7 +77,19 @@ class Generative_autoencoder:
             image_dimensions=self.image_dimensions)
         # checking quality of reproduced images
         return images, reconstructions, labels
-    
+
+    def anomaly_detection(self, k):
+        # Calculate reconstruction loss (MSE) for test data
+        # plot the k most anomalous images
+        images, reconstructions, losses = self.autoencoder_trainer.ae_detect_anomaly_by_loss()
+
+        worst_indices = np.argsort(losses)[-1:-(k + 1):-1]
+        print("Anomaly loss values:", [losses[index] for index in worst_indices])
+        anomalies = np.array([reconstructions[index] for index in worst_indices])
+        visualisations.show_images_and_reconstructions(anomalies, f'AE_Anomalies_latent_size:{self.latent_vector_size}_lr_{self.autoencoder_trainer.lr}_epochs:{self.autoencoder_trainer.epochs}')
+
+
+
     def generate_samples(self):
         Z = self.get_latent_vector_and_classes(self.autoencoder.encoder, self.num_samples)#, self.dataloaders)
         generated_images = utils.generate_images_from_Z(Z, self.autoencoder.decoder, self.image_dimensions, title= "Gen_AE_generated_images")
@@ -135,9 +148,11 @@ class Generative_autoencoder:
         plt.legend()
         plt.savefig(f'figures/autoencoder_{autoencoder_trainer.loss_function}_{autoencoder_trainer.epochs}_training.png')
 
+
+
 def main():
     torch.manual_seed(0)
-
+    """ GENERATIVE AUTOENCODER ROUTINE"""
     batch_size = 16
     data_object = StackedMNISTData(mode=DataMode.MONO_FLOAT_COMPLETE, default_batch_size=batch_size)
     #instantiate verification network
@@ -153,26 +168,44 @@ def main():
     num_samples = 200
     latent_vector_size = 64  # recommended for MNIST between 16 and 64
 
-    gen_autoencoder = Generative_autoencoder(
+    #gen_autoencoder = Generative_autoencoder(
+    #    data_object,
+    #    autoencoder_learning_rate,
+    #    autoencoder_loss_function,
+    #    autoencoder_optimizer,
+    #    autoencoder_epochs,
+    #    # TODO add path to model weights as argument
+    #    latent_vector_size,
+    #    batch_size,
+    #    num_samples,
+    #)
+    #gen_autoencoder.train_autoencoder()
+    #images, reconstructions, labels = gen_autoencoder.reconstruct_test_data():
+    ##Check quality of reconstructions
+    #gen_autoencoder.check_autoencoder_performance(net, verification_tolerance, reconstructions, labels)
+
+    ##Generate samples
+    #generated_images = gen_autoencoder.generate_samples()
+
+    ##check quality of generated images
+    #gen_autoencoder.check_autoencoder_performance(net, verification_tolerance, generated_images)
+
+    """ ANOMALY DETECTOR AUTOENCODER ROUTINE"""
+    data_object = StackedMNISTData(mode=DataMode.MONO_FLOAT_MISSING, default_batch_size=batch_size)
+    number_anom_images_to_show = 6
+    anom_autoencoder = Generative_autoencoder(
         data_object,
         autoencoder_learning_rate,
         autoencoder_loss_function,
         autoencoder_optimizer,
         autoencoder_epochs,
-
+        # TODO add path to model weights as argument
         latent_vector_size,
         batch_size,
         num_samples,
     )
-    images, reconstructions, labels = gen_autoencoder.train_autoencoder()
-    #Check quality of reconstructions
-    gen_autoencoder.check_autoencoder_performance(net, verification_tolerance, reconstructions, labels)
+    #images, reconstructions, labels = anom_autoencoder.train_autoencoder()
 
-    #Generate samples
-    #generated_images = gen_autoencoder.generate_samples()
-
-    #check quality of generated images
-    #gen_autoencoder.check_autoencoder_performance(net, verification_tolerance, generated_images)
-
+    anom_autoencoder.anomaly_detection(number_anom_images_to_show)
 if __name__ == '__main__':
     main()
