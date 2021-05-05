@@ -32,7 +32,7 @@ class Decoder(nn.Module):
 
             nn.ConvTranspose2d(
                 in_channels=self.encoder_last_layer_dim[0],
-                out_channels=self.hidden_filters//2,
+                out_channels=self.hidden_filters,
                 kernel_size=(3,3),
                 stride=(1,1),
                 padding=(1,1)
@@ -46,14 +46,14 @@ class Decoder(nn.Module):
             #    stride=(3, 3),
             #    padding=(1, 1)
             #),
-            nn.BatchNorm2d(self.hidden_filters//2),
-            nn.ConvTranspose2d(
-                in_channels=self.hidden_filters//2,
-                out_channels=self.hidden_filters,
-                kernel_size=(3, 3),
-                stride=(3, 3),
-                padding=(1, 1)
-            ),
+            #nn.BatchNorm2d(self.hidden_filters//2),
+            #nn.ConvTranspose2d(
+            #    in_channels=self.hidden_filters//2,
+            #    out_channels=self.hidden_filters,
+            #    kernel_size=(3, 3),
+            #    stride=(3, 3),
+            #    padding=(1, 1)
+            #),
 
             nn.BatchNorm2d(self.hidden_filters),
             nn.ConvTranspose2d(
