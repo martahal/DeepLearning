@@ -103,9 +103,7 @@ class Trainer:
         for epoch in range(self.epochs):
             epoch_loss = 0.
             for (images, classes) in self.training_data:
-                #images = utils.to_cuda(images)
-                #x_hat, mean, log_std = self.model(images)
-                train_loss, kl_div, recon_loss = self._VAE_training_step(images)#x_hat, mean, log_std)
+                train_loss, kl_div, recon_loss = self._VAE_training_step(images)
 
                 self.train_history['loss'][self.global_step] = train_loss
                 self.train_history['kl_div'][self.global_step] = kl_div
@@ -128,28 +126,24 @@ class Trainer:
         # Transfer to GPU if available
         images = utils.to_cuda(images)
 
+        # Make reconstructions through decoder
         x_hat, mean, log_std, encoded_x = self.model(images)
-
-        #reconstruction_loss = self._calculate_reconstruction_loss(x_hat, images)
-
+        # Calculate kl divergence
         kl_div = self._calculate_KL_divergence(mean, log_std, encoded_x)
-
+        # # Get Gaussian likelihood reconstruction loss
         reconstruction_loss = self._calculate_reconstruction_loss(x_hat, images, log_scale=nn.Parameter(torch.Tensor([0.0])))
 
-        #elbo = -1 * (kl_div + reconstruction_loss).mean() / images.shape[0]
-        #elbo = -1 * (kl_div + reconstruction_loss)
-
+        # Provide ELBO loss
         elbo = kl_div - reconstruction_loss
         elbo = elbo.mean()
-        #total_elbo_loss = elbo/images.shape[0]
+
 
         # For tracking kl_div and reconstruction loss individually:
         kl_div = kl_div.mean()
-        #total_kl_div = kl_div/images.shape[0]
-
         reconstruction_loss = reconstruction_loss.mean()
+
         #total_recon_loss = reconstruction_loss/images.shape[0]
-        ## Parametrize Q(z|x)
+        #
         #mu, log_variance = self.model.mu_layer(encoded_x), self.model.variance_layer(encoded_x)  # TODO Why is this called log_var?
         #sigma = torch.exp(log_variance / 2)
         #q = torch.distributions.Normal(mu, sigma)
@@ -166,14 +160,13 @@ class Trainer:
 
 
 
-        ## Provide ELBO loss
+        #
         #elbo = kl_div - reconstruction_loss
         #elbo = elbo.mean() # TODO why?
 #
-        ## TODO what about the following?
+
         ## Backward pass
         elbo.backward()
-        #total_elbo_loss.backward()
         self.optimizer.step()
 
         # Reset gradients
@@ -261,8 +254,6 @@ class Trainer:
         recons= None
         losses = None
 
-        #for i in range(len(self.test_data)):  # iterate over all batches
-        #    for j in range(len(self.test_data[i])):  # iterate over all images in batch
         with torch.no_grad():
             for image_batch, label_batch in self.test_data:
                 #image = self.test_data[i][0][j]  # each batch is a tuple of images and labels
@@ -358,8 +349,7 @@ class Trainer:
 
             total_test_loss = elbo/len(self.test_data)
         return round(total_test_loss.item(), 4), round(total_kl_div.item(), 4), round(total_recon_loss.item(), 4)
-        #total_test_loss = elbo_test_loss / len(self.test_data)
-        #return round(total_test_loss.item(), 4)
+
 
 
     def _calculate_reconstruction_loss(self, x_hat, images, log_scale=None):
@@ -371,7 +361,7 @@ class Trainer:
             p_xz = torch.distributions.Normal(mean, scale)
             # probability of image under p(x|z)
             log_pxz = p_xz.log_prob(images)
-            log_pxz = log_pxz.sum(dim=(1, 2, 3))
+            log_pxz = log_pxz.sum(dim=(1, 2, 3))/images.shape[1]* images.shape[2] * images.shape[3] # dividing by image dimensions
             return log_pxz
         else:
             #Calculate log likelihood assuming multivariate Bernoulli distribution
@@ -379,26 +369,24 @@ class Trainer:
             (1 - images) * torch.log(1 - x_hat + 1e-9), axis=(1, 2, 3))
             return recon_loss
 
-    def _calculate_KL_divergence(self, mean, log_std, z):#z, mu, sigma):
+    def _calculate_KL_divergence(self, mean, log_std, z):
 
-        #kl_div = 0.5 * torch.sum(1 + torch.log(log_std.exp() ** 2 + 1e-9) - mean.pow(2) - log_std.exp() ** 2, axis=1)
-        #return kl_div
         # Assuming normal distributions:
         # Make fixed normal distribution
         zeros = torch.zeros_like(mean)
         ones = torch.ones_like(log_std)
         p = torch.distributions.Normal(zeros, ones)
-#
+
+        # Parametrize q(z|x)
         ## Make the estimated distribution from our parameters
         q = torch.distributions.Normal(mean, log_std)
 #
-        ## Get log probabilities
+        ## Get log probabilities from p(z) and q(z|x)
         log_p, log_q = p.log_prob(z), q.log_prob(z)
 #
         ## Calculating kl_div
         kl_div = (log_q - log_p)
         ## Summation trick
-        ##TODO Understand what this does
         kl_div = kl_div.sum(-1)
         return kl_div
     """

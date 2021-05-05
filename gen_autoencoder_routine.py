@@ -201,16 +201,16 @@ def main():
         num_samples,
         gen_ae_save_path
     )
-    #gen_autoencoder.train_autoencoder()
-    #images, reconstructions, labels = gen_autoencoder.reconstruct_test_data()
+    gen_autoencoder.train_autoencoder()
+    images, reconstructions, labels = gen_autoencoder.reconstruct_test_data()
     #Check quality of reconstructions
-    #gen_autoencoder.check_autoencoder_performance(net, verification_tolerance, reconstructions, labels)
+    gen_autoencoder.check_autoencoder_performance(net, verification_tolerance, reconstructions, labels)
 #
     ##Generate samples
-    generated_images = gen_autoencoder.generate_samples()
+    #generated_images = gen_autoencoder.generate_samples()
 #
     ##check quality of generated images
-    gen_autoencoder.check_autoencoder_performance(net, verification_tolerance, generated_images)
+    #gen_autoencoder.check_autoencoder_performance(net, verification_tolerance, generated_images)
 #
     #""" ANOMALY DETECTOR AUTOENCODER ROUTINE"""
     #data_object = StackedMNISTData(mode=DataMode.MONO_FLOAT_MISSING, default_batch_size=batch_size)
