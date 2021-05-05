@@ -127,7 +127,7 @@ class Generative_AE_Routine:
         )
         print(f"Coverage: {100 * coverage:.2f}%")
         if labels is not None:
-            if coverage != 0.0:
+            #if coverage != 0.0:
                 predictability, accuracy = verification_net.check_predictability(
                     data=images,
                     correct_labels=labels,
@@ -137,7 +137,7 @@ class Generative_AE_Routine:
                 print(f"Accuracy: {100 * accuracy:.2f}%")
         else:
             if coverage != 0.0:
-                predictability = verification_net.check_predictability(
+                predictability, accuracy = verification_net.check_predictability(
                     data=images,
                     tolerance=tolerance
                 )
@@ -202,15 +202,15 @@ def main():
         gen_ae_save_path
     )
     #gen_autoencoder.train_autoencoder()
-    images, reconstructions, labels = gen_autoencoder.reconstruct_test_data()
+    #images, reconstructions, labels = gen_autoencoder.reconstruct_test_data()
     #Check quality of reconstructions
     #gen_autoencoder.check_autoencoder_performance(net, verification_tolerance, reconstructions, labels)
 #
     ##Generate samples
-    #generated_images = gen_autoencoder.generate_samples()
+    generated_images = gen_autoencoder.generate_samples()
 #
     ##check quality of generated images
-    #gen_autoencoder.check_autoencoder_performance(net, verification_tolerance, generated_images)
+    gen_autoencoder.check_autoencoder_performance(net, verification_tolerance, generated_images)
 #
     #""" ANOMALY DETECTOR AUTOENCODER ROUTINE"""
     #data_object = StackedMNISTData(mode=DataMode.MONO_FLOAT_MISSING, default_batch_size=batch_size)
