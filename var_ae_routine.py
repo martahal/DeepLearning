@@ -168,6 +168,7 @@ class VAE_Routine():
         plt.legend()
         plt.savefig(
             f'figures/VAE_ll_dim:{enc_last_layer_dim}_lr:{vae_trainer.lr}_epochs:{vae_trainer.epochs}_training.png')
+        plt.show()
 
     @staticmethod
     def get_latent_vectors(encoder, n_samples):
@@ -221,8 +222,8 @@ def main():
     images, reconstructions, labels = vae_routine.reconstruct_test_data()
     ## Check quality of reconstructions:
     #print('CHECKING RECONSTRUCTED IMAGES QUALITY')
-    #print(f'Number of reconstructions: {len(reconstructions)}')
-    #vae_routine.check_vae_performance(net, verification_tolerance, reconstructions, labels)
+    print(f'Number of reconstructions: {len(reconstructions)}')
+    vae_routine.check_vae_performance(net, verification_tolerance, reconstructions, labels)
 #
 #
     ## Check quality of generated images

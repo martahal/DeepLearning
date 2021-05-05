@@ -30,7 +30,7 @@ class Encoder(nn.Module):
                 stride=(3,3),
                 padding=(1,1)
             ),
-            #nn.BatchNorm2d(self.num_filters),
+            nn.BatchNorm2d(self.num_filters),
             #nn.Conv2d(
             #    in_channels=self.num_filters,
             #    out_channels=self.num_filters //2,
