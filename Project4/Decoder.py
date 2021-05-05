@@ -35,7 +35,8 @@ class Decoder(nn.Module):
                 kernel_size=(3,3),
                 stride=(1,1),
                 padding=(1,1)
-            ),nn.BatchNorm2d(self.hidden_filters),
+            ),
+            nn.BatchNorm2d(self.hidden_filters),
             #nn.ConvTranspose2d(
             #    in_channels=self.hidden_filters*2,
             #    out_channels=self.hidden_filters,

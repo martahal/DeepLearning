@@ -44,6 +44,7 @@ class Encoder(nn.Module):
                 stride=(1,1),
                 padding=(1,1)
             ),
+            nn.BatchNorm2d(self.last_conv_layer_dim[0]),
             nn.ReLU(),
             nn.Flatten(),
             nn.Linear(
