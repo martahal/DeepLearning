@@ -85,7 +85,7 @@ class Generative_autoencoder:
 
         worst_indices = np.argsort(losses)[-1:-(k + 1):-1]
         print("Anomaly loss values:", [losses[index] for index in worst_indices])
-        anomalies = np.array([reconstructions[index] for index in worst_indices])
+        anomalies = np.array([images[index] for index in worst_indices])
         visualisations.show_images_and_reconstructions(anomalies, f'AE_Anomalies_latent_size:{self.latent_vector_size}_lr_{self.autoencoder_trainer.lr}_epochs:{self.autoencoder_trainer.epochs}')
 
 

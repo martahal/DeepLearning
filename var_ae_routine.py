@@ -87,7 +87,7 @@ class VAE_Routine():
 
         worst_indices = np.argsort(losses)[-1:-(k + 1):-1]
         print("Anomaly loss values:", [losses[index] for index in worst_indices])
-        anomalies = np.array([reconstructions[index] for index in worst_indices])
+        anomalies = np.array([images[index] for index in worst_indices])
         visualisations.show_images_and_reconstructions(anomalies, f'VAE_Anomalies_latent_size:{self.latent_vector_size}_lr_{self.vae_trainer.lr}_epochs:{self.vae_trainer.epochs}')
 
 
