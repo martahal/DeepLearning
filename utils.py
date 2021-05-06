@@ -62,7 +62,7 @@ def make_reconstructions(autoencoder, vis_data, num_images, batch_size, image_di
         image_batch = to_cuda(image_batch)
         reconstruction_batch, aux = autoencoder(image_batch)
         # Convert from tensor to numpy
-        image_batch = image_batch.view(
+        image_batch = image_batch.reshape(
             image_batch.shape[0],
             image_batch.shape[2],
             image_batch.shape[3],
@@ -70,7 +70,7 @@ def make_reconstructions(autoencoder, vis_data, num_images, batch_size, image_di
         )
         image_batch = image_batch.cpu().detach().numpy()
         label = label.cpu().detach().numpy()
-        reconstruction_batch = reconstruction_batch.view(
+        reconstruction_batch = reconstruction_batch.reshape(
             reconstruction_batch.shape[0],
             reconstruction_batch.shape[2],
             reconstruction_batch.shape[3],
@@ -99,7 +99,7 @@ def make_vae_reconstructions(vae, vis_data, num_images, batch_size, image_dimens
         image_batch = to_cuda(image_batch)
         reconstruction_batch, aux1, aux2, aux_3 = vae(image_batch)
         # Convert from tensor to numpy
-        image_batch = image_batch.view(
+        image_batch = image_batch.reshape(
             image_batch.shape[0],
             image_batch.shape[2],
             image_batch.shape[3],
@@ -107,7 +107,7 @@ def make_vae_reconstructions(vae, vis_data, num_images, batch_size, image_dimens
         )
         image_batch = image_batch.cpu().detach().numpy()
         label = label.cpu().detach().numpy()
-        reconstruction_batch = reconstruction_batch.view(
+        reconstruction_batch = reconstruction_batch.reshape(
             reconstruction_batch.shape[0],
             reconstruction_batch.shape[2],
             reconstruction_batch.shape[3],
