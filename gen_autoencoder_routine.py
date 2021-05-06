@@ -80,7 +80,7 @@ class Generative_AE_Routine:
         images, reconstructions, labels = utils.make_reconstructions(
             self.autoencoder,
             visualisation_data,
-            num_images=12,
+            num_images=25,
             batch_size=self.batch_size,
             image_dimensions=self.image_dimensions,
             title=f'AE_z_size:{self.latent_vector_size}_lr_{self.autoencoder_trainer.lr}_epochs:{self.autoencoder_trainer.epochs}'

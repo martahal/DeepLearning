@@ -84,7 +84,7 @@ class VAE_Routine():
         images, reconstructions, labels = utils.make_vae_reconstructions(
             self.vae,
             visualisation_data,
-            num_images=12,
+            num_images=25,
             batch_size=self.batch_size,
             image_dimensions=self.image_dimensions,
             title=f'VAE_z_size:{self.latent_vector_size}_lr_{self.vae_trainer.lr}_epochs:{self.vae_trainer.epochs}'
