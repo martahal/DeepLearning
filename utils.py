@@ -82,7 +82,7 @@ def make_reconstructions(autoencoder, vis_data, num_images, batch_size, image_di
         reconstructions.extend(reconstruction_batch)
     vis_images = images[1000: 1000 + num_images]
     vis_reconstructions = reconstructions[1000: 1000 +num_images]
-    vis_labels = labels[1000: 1000 +num_images]
+    vis_labels = labels[1000: 1000 + num_images]
 #
     visualisations.show_images_and_reconstructions(np.array(vis_images), title, vis_labels)
     visualisations.show_images_and_reconstructions(np.array(vis_reconstructions),
