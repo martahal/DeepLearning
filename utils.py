@@ -80,9 +80,9 @@ def make_reconstructions(autoencoder, vis_data, num_images, batch_size, image_di
         images.extend(image_batch)
         labels.extend(label)
         reconstructions.extend(reconstruction_batch)
-    vis_images = images[25:num_images]
-    vis_reconstructions = reconstructions[25:num_images]
-    vis_labels = labels[25:num_images]
+    vis_images = images[25:25 +num_images]
+    vis_reconstructions = reconstructions[25:25 +num_images]
+    vis_labels = labels[25:25 +num_images]
 #
     visualisations.show_images_and_reconstructions(np.array(vis_images), title, vis_labels)
     visualisations.show_images_and_reconstructions(np.array(vis_reconstructions),
@@ -117,9 +117,9 @@ def make_vae_reconstructions(vae, vis_data, num_images, batch_size, image_dimens
         images.extend(image_batch)
         labels.extend(label)
         reconstructions.extend(reconstruction_batch)
-    vis_images = images[25:num_images]
-    vis_reconstructions = reconstructions[25:num_images]
-    vis_labels = labels[25:num_images]
+    vis_images = images[25:25 +num_images]
+    vis_reconstructions = reconstructions[25:25 +num_images]
+    vis_labels = labels[25:25 +num_images]
 
     visualisations.show_images_and_reconstructions(np.array(vis_images), title, vis_labels)
     visualisations.show_images_and_reconstructions(np.array(vis_reconstructions),
