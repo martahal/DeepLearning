@@ -182,13 +182,13 @@ class VAE_Routine():
         # Ugly fix to get sample in the shape I want
         temp_tensor = torch.ones(n_samples)
         # Inefficient quick-fix to make data batch in the shape we want
-        (train_data, test_data) = utils.get_data_to_tensors(data, batch_size=n_samples)
+        #(train_data, test_data) = utils.get_data_to_tensors(data, batch_size=n_samples)
 
         # Reparametrization trick
-        x_hat = test_data[0][0]
-        mu, sigma = encoder(x_hat)
+        #x_hat = test_data[0][0]
+        #mu, sigma = encoder(x_hat)
         # get samples Z = mean * std * epsilon
-        Z = mu * sigma *  epsilon.sample(sample_shape=temp_tensor.shape)
+        Z = epsilon.sample(sample_shape=temp_tensor.shape) #* mu * sigma
         return Z
 def main():
     torch.manual_seed(1)
