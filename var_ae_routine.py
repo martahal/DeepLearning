@@ -117,7 +117,7 @@ class VAE_Routine():
             # see if we can do:
             self.vae.load_state_dict(torch.load(pathlib.Path(load_model_path).joinpath("best.ckpt")))
             print(f'Loaded model from {load_model_path}')
-        Z = self.get_latent_vectors(self.vae.encoder, data_object, self.num_samples )
+        Z = self.sample_Z(self.vae.encoder, data_object, self.num_samples)
         generated_images = utils.generate_images_from_Z(
             Z,
             self.vae.decoder,
@@ -171,7 +171,7 @@ class VAE_Routine():
         plt.show()
 
     @staticmethod
-    def get_latent_vectors(encoder, data,  n_samples):
+    def sample_Z(encoder, data, n_samples):
         """
         samples a random distribution of the latent vectors, Z, that is produced by the data examples
         :param encoder: The encoder that produces the latent vectors
