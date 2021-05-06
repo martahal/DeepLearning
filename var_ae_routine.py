@@ -111,13 +111,13 @@ class VAE_Routine():
 
 
 
-    def generate_samples(self, load_model_path=None):
+    def generate_samples(self, data_object, load_model_path=None):
         if load_model_path is not None:
             # self.vae_trainer.load_best_model() Does not return the model but sets the self.model in trainer to be best model
             # see if we can do:
             self.vae.load_state_dict(torch.load(pathlib.Path(load_model_path).joinpath("best.ckpt")))
             print(f'Loaded model from {load_model_path}')
-        Z = self.get_latent_vectors(self.vae.encoder, self.num_samples )
+        Z = self.get_latent_vectors(self.vae.encoder, data_object, self.num_samples )
         generated_images = utils.generate_images_from_Z(
             Z,
             self.vae.decoder,
@@ -171,16 +171,24 @@ class VAE_Routine():
         plt.show()
 
     @staticmethod
-    def get_latent_vectors(encoder, n_samples):
+    def get_latent_vectors(encoder, data,  n_samples):
         """
         samples a random distribution of the latent vectors, Z, that is produced by the data examples
         :param encoder: The encoder that produces the latent vectors
         :param n_samples: number of samples from Z
         :return: a random sample of Z from the standard normal distribution
         """
-        p = torch.distributions.Normal(torch.zeros(encoder.latent_vector_size), torch.ones(encoder.latent_vector_size))
+        epsilon = torch.distributions.Normal(torch.zeros(encoder.latent_vector_size), torch.ones(encoder.latent_vector_size))
+        # Ugly fix to get sample in the shape I want
         temp_tensor = torch.ones(n_samples)
-        Z = p.sample(sample_shape=temp_tensor.shape) # Wow, so ugly, but my brain hurts now
+        # Inefficient quick-fix to make data batch in the shape we want
+        (train_data, test_data) = utils.get_data_to_tensors(data, batch_size=n_samples)
+
+        # Reparametrization trick
+        x_hat = test_data[0][0]
+        mu, sigma = encoder(x_hat)
+        # get samples Z = mean * std * epsilon
+        Z = mu * sigma *  epsilon.sample(sample_shape=temp_tensor.shape)
         return Z
 def main():
     torch.manual_seed(1)
@@ -228,9 +236,9 @@ def main():
 #
     ## Check quality of generated images
     #print('CHECKING GENERATED IMAGES QUALITY')
-    #generated_images = vae_routine.generate_samples()
-    #print(f'Number of reconstructions: {len(generated_images)}')
-    #vae_routine.check_vae_performance(net, verification_tolerance, generated_images)
+    generated_images = vae_routine.generate_samples(data_object)
+    print(f'Number of generated images: {len(generated_images)}')
+    vae_routine.check_vae_performance(net, verification_tolerance, generated_images)
 
     """ ANOMALY DETECTOR VAE ROUTINE"""
     #data_object = StackedMNISTData(mode=DataMode.MONO_FLOAT_MISSING, default_batch_size=batch_size)
