@@ -29,21 +29,22 @@ class Encoder(nn.Module):
                 padding=(1,1)
             ),
             nn.BatchNorm2d(num_filters),
+            #nn.Conv2d(
+            #    in_channels=self.num_filters,
+            #    out_channels=self.num_filters*2,
+            #    kernel_size=(3, 3),
+            #    stride=(3,3),
+            #    padding=(1, 1)
+            #),
+            #nn.BatchNorm2d(self.num_filters*2),
             nn.Conv2d(
                 in_channels=self.num_filters,
-                out_channels=self.num_filters*2,
-                kernel_size=(3, 3),
-                stride=(3,3),
-                padding=(1, 1)
-            ),
-            nn.BatchNorm2d(self.num_filters*2),
-            nn.Conv2d(
-                in_channels=self.num_filters*2,
                 out_channels=self.last_conv_layer_dim[0],
                 kernel_size=(3,3),
                 stride=(1,1),
                 padding=(1,1)
             ),
+            nn.BatchNorm2d(self.last_conv_layer_dim[0]),
             nn.ReLU(),
             nn.Flatten(),
             nn.Linear(

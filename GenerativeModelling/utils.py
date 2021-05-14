@@ -1,4 +1,4 @@
-from Project3 import visualisations
+from SemiSupervisedLearning import visualisations
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
@@ -51,31 +51,42 @@ def normalize_images(images):
     return norm_images
 
 
-def make_reconstructions(autoencoder, vis_data, num_images, batch_size, image_dimensions):
+def make_reconstructions(autoencoder, vis_data, num_images, batch_size, image_dimensions, title):
     # Extremely inefficient way of doing this
     # Forward all images, then selecting the ones i want to visualize
     images = []
     reconstructions = []
     labels = []
-    for image, label in vis_data:
+    for image_batch, label in vis_data:
         #Make reconstruction
-        image = to_cuda(image)
-        reconstruction_batch, aux = autoencoder(image)
+        image_batch = to_cuda(image_batch)
+        reconstruction_batch, aux = autoencoder(image_batch)
         # Convert from tensor to numpy
-        image = image.view(batch_size, image_dimensions[1], image_dimensions[2], image_dimensions[0])
-        image = image.cpu().detach().numpy()
+        image_batch = image_batch.reshape(
+            image_batch.shape[0],
+            image_batch.shape[2],
+            image_batch.shape[3],
+            image_batch.shape[1]
+        )
+        image_batch = image_batch.cpu().detach().numpy()
         label = label.cpu().detach().numpy()
-        reconstruction_batch = reconstruction_batch.view(batch_size, image_dimensions[1], image_dimensions[2], image_dimensions[0])
+        reconstruction_batch = reconstruction_batch.reshape(
+            reconstruction_batch.shape[0],
+            reconstruction_batch.shape[2],
+            reconstruction_batch.shape[3],
+            reconstruction_batch.shape[1]
+        )
         reconstruction_batch = reconstruction_batch.cpu().detach().numpy()
-        images.extend(image)
+        images.extend(image_batch)
         labels.extend(label)
         reconstructions.extend(reconstruction_batch)
-    vis_images = images[:num_images]
-    vis_reconstructions = reconstructions[:num_images]
-    vis_labels = labels[:num_images]
+    vis_images = images[1000: 1000 + num_images]
+    vis_reconstructions = reconstructions[1000: 1000 +num_images]
+    vis_labels = labels[1000: 1000 + num_images]
 #
-    visualisations.show_images_and_reconstructions(np.array(vis_images), vis_labels, title='test_set_images')
-    visualisations.show_images_and_reconstructions(np.array(vis_reconstructions), vis_labels, title='test_set_reconstructions')
+    visualisations.show_images_and_reconstructions(np.array(vis_images), title, vis_labels)
+    visualisations.show_images_and_reconstructions(np.array(vis_reconstructions),
+                                                   f'{title}_reconstructions', vis_labels)
     return np.array(images), np.array(reconstructions), np.array(labels)
 
 
@@ -83,26 +94,32 @@ def make_vae_reconstructions(vae, vis_data, num_images, batch_size, image_dimens
     images = []
     reconstructions = []
     labels = []
-    for image, label in vis_data:
+    for image_batch, label in vis_data:
         # Make reconstruction
-        image = to_cuda(image)
-        reconstruction_batch, aux1, aux2, aux_3 = vae(image)
+        image_batch = to_cuda(image_batch)
+        reconstruction_batch, aux1, aux2, aux_3 = vae(image_batch)
         # Convert from tensor to numpy
-        image = image.view(batch_size, image_dimensions[1], image_dimensions[2], image_dimensions[0])
-        image = image.cpu().detach().numpy()
+        image_batch = image_batch.reshape(
+            image_batch.shape[0],
+            image_batch.shape[2],
+            image_batch.shape[3],
+            image_batch.shape[1]
+        )
+        image_batch = image_batch.cpu().detach().numpy()
         label = label.cpu().detach().numpy()
-        reconstruction_batch = reconstruction_batch.view(
-            batch_size,
-            image_dimensions[1],
-            image_dimensions[2],
-            image_dimensions[0])
+        reconstruction_batch = reconstruction_batch.reshape(
+            reconstruction_batch.shape[0],
+            reconstruction_batch.shape[2],
+            reconstruction_batch.shape[3],
+            reconstruction_batch.shape[1]
+        )
         reconstruction_batch = reconstruction_batch.cpu().detach().numpy()
-        images.extend(image)
+        images.extend(image_batch)
         labels.extend(label)
         reconstructions.extend(reconstruction_batch)
-    vis_images = images[:num_images]
-    vis_reconstructions = reconstructions[:num_images]
-    vis_labels = labels[:num_images]
+    vis_images = images[1000: 1000 +num_images]
+    vis_reconstructions = reconstructions[1000: 1000 +num_images]
+    vis_labels = labels[1000: 1000 +num_images]
 
     visualisations.show_images_and_reconstructions(np.array(vis_images), title, vis_labels)
     visualisations.show_images_and_reconstructions(np.array(vis_reconstructions),
@@ -124,51 +141,7 @@ def generate_images_from_Z(Z, decoder, image_dimensions, title):
     )
     generated_images = generated_images.cpu().detach().numpy()
     labels = None
-    number_to_vis = 12
+    number_to_vis = 25
     visualisations.show_vae_generated_img(generated_images[:number_to_vis], title=title)
     return generated_images
 
-"""
-Methods for saving models
-"""
-
-def save_checkpoint(state_dict: dict,
-                    filepath: pathlib.Path,
-                    is_best: bool,
-                    max_keep: int = 1):
-    """
-    Saves state_dict to filepath. Deletes old checkpoints as time passes.
-    If is_best is toggled, saves a checkpoint to best.ckpt
-    """
-    filepath.parent.mkdir(exist_ok=True, parents=True)
-    list_path = filepath.parent.joinpath("latest_checkpoint")
-    torch.save(state_dict, filepath)
-    if is_best:
-        torch.save(state_dict, filepath.parent.joinpath("best.ckpt"))
-    previous_checkpoints = get_previous_checkpoints(filepath.parent)
-    if filepath.name not in previous_checkpoints:
-        previous_checkpoints = [filepath.name] + previous_checkpoints
-    if len(previous_checkpoints) > max_keep:
-        for ckpt in previous_checkpoints[max_keep:]:
-            path = filepath.parent.joinpath(ckpt)
-            if path.exists():
-                path.unlink()
-    previous_checkpoints = previous_checkpoints[:max_keep]
-    with open(list_path, 'w') as fp:
-        fp.write("\n".join(previous_checkpoints))
-
-
-def get_previous_checkpoints(directory: pathlib.Path) -> list:
-    assert directory.is_dir()
-    list_path = directory.joinpath("latest_checkpoint")
-    list_path.touch(exist_ok=True)
-    with open(list_path) as fp:
-        ckpt_list = fp.readlines()
-    return [_.strip() for _ in ckpt_list]
-
-
-def load_best_checkpoint(directory: pathlib.Path):
-    filepath = directory.joinpath("best.ckpt")
-    if not filepath.is_file():
-        return None
-    return torch.load(directory.joinpath("best.ckpt"))
