@@ -24,3 +24,6 @@ The comparison can be done with four different common datasets; CIFAR10, MNIST, 
 Here is an implementation of a regular autoencoder and a variational autoencoder both as generative models and anomaly detectors using PyTorch trained on MNIST. The models are configured to be able to run on a GPU if you have one available. 
 
 **To run:** Easiest way is to run either of the demo notebooks. VAE stands for variational autoencoder and AE for Autoencoder. Note that this should be done on a GPU to achieve some ok results. 
+
+Here is an example of reconstruction of input images and generation of new images from the variational autoencoder
+![](demo_figures/A_0.83_accuracy.png)
