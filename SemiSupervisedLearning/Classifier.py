@@ -2,11 +2,11 @@ from torch import nn
 import matplotlib.pyplot as plt
 
 
-from Projects.Project3.Encoder import Encoder
-from Projects.Project3.ClassifierHead import ClassifierHead
-from Projects.Project3.Trainer import Trainer
-from Projects.Project3.Dataloader import load_fashion_mnist
-from Projects.Project3 import visualisations
+from Encoder import Encoder
+from ClassifierHead import ClassifierHead
+from Trainer import Trainer
+from Dataloader import load_fashion_mnist
+import visualisations
 
 
 class Classifier(nn.Module):

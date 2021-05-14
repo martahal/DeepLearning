@@ -1,6 +1,6 @@
-from Projects.Project3.SSN import SSN
-from Projects.Project3.SCN import SCN
-from Projects.Project3.utils import get_and_split_dataset, compare_SSN_and_SCN
+from SSN import SSN
+from SCN import SCN
+from utils import get_and_split_dataset, compare_SSN_and_SCN
 
 def main():
     # Global parameters for both SSN and SCN
