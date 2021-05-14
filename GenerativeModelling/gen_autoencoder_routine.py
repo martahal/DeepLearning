@@ -1,11 +1,11 @@
-from Project4.Autoencoder import Autoencoder
-from Project4.Encoder import Encoder
-from Project4.Decoder import Decoder
-from Project4.verification_net import VerificationNet
-from Project3 import visualisations
-from Trainer import Trainer
-from Project4.stacked_mnist import StackedMNISTData, DataMode
-import utils
+from GenerativeModelling.Autoencoder import Autoencoder
+from GenerativeModelling.Encoder import Encoder
+from GenerativeModelling.Decoder import Decoder
+from GenerativeModelling.verification_net import VerificationNet
+from SemiSupervisedLearning import visualisations
+from GenerativeModelling.Trainer import Trainer
+from GenerativeModelling.stacked_mnist import StackedMNISTData, DataMode
+from GenerativeModelling import utils
 
 import torch
 import matplotlib.pyplot as plt
@@ -112,7 +112,7 @@ class Generative_AE_Routine:
             self.autoencoder.load_state_dict(torch.load(pathlib.Path(load_model_path).joinpath("best.ckpt")))
             print(f'Loaded model from {load_model_path}')
         Z = self.get_latent_vector_and_classes(self.autoencoder.encoder, self.num_samples)#, self.dataloaders)
-        generated_images = utils.generate_images_from_Z(Z, self.autoencoder.decoder, self.image_dimensions, title= "Gen_AE_generated_images")
+        generated_images = utils.generate_images_from_Z(Z, self.autoencoder.decoder, self.image_dimensions, title="Gen_AE_generated_images")
         return generated_images
 
     def check_autoencoder_performance(self, verification_net, tolerance, images, labels=None, load_model_path=None):

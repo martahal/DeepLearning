@@ -1,10 +1,10 @@
-import utils
+from GenerativeModelling import utils
 
 import pathlib
 import torch
 from torch import nn
 import collections
-import numpy as np
+
 
 class Trainer:
 
@@ -365,46 +365,6 @@ class Trainer:
         ## Summation trick
         kl_div = kl_div.sum(-1)
         return kl_div
-    """
-    Methods for saving and loading model
-    """
-    def save_model(self):
-        def is_best_model():
-            """
-                Returns True if current model has the lowest validation loss
-            """
-            val_loss = self.validation_history["loss"]
-            validation_losses = list(val_loss.values())
-            return validation_losses[-1] == min(validation_losses)
-
-        state_dict = self.model.state_dict()
-        filepath = self.checkpoint_dir.joinpath(f"{self.global_step}.ckpt")
-
-        utils.save_checkpoint(state_dict, filepath, is_best_model())
-
-    def load_best_model(self):
-        state_dict = utils.load_best_checkpoint(self.checkpoint_dir)
-        if state_dict is None:
-            print(
-                f"Could not load best checkpoint. Did not find under: {self.checkpoint_dir}")
-            return
-        self.model.load_state_dict(state_dict)
-
-    def should_early_stop(self):
-        """
-            Checks if validation loss doesn't improve over early_stop_count epochs.
-        """
-        # Check if we have more than early_stop_count elements in our validation_loss list.
-        val_loss = self.validation_history["loss"]
-        if len(val_loss) < self.early_stop_count:
-            return False
-        # We only care about the last [early_stop_count] losses.
-        relevant_loss = list(val_loss.values())[-self.early_stop_count:]
-        first_loss = relevant_loss[0]
-        if first_loss == min(relevant_loss):
-            print("Early stop criteria met")
-            return True
-        return False
 
 
 

@@ -1,7 +1,7 @@
 from torch import nn
 
-from Project4.stacked_mnist import StackedMNISTData
-from Project4.verification_net import VerificationNet
+from GenerativeModelling.stacked_mnist import StackedMNISTData
+from GenerativeModelling.verification_net import VerificationNet
 
 class VAE(nn.Module):
     def __init__(self, encoder, decoder):

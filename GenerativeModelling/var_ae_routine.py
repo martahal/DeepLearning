@@ -1,11 +1,11 @@
-from Project4.VAE import VAE
-from Project4.VAE_Encoder import Encoder
-from Project4.VAE_Decoder import Decoder
-from Project4.verification_net import VerificationNet
-from Project3 import visualisations
-from Trainer import Trainer
-from Project4.stacked_mnist import StackedMNISTData, DataMode
-import utils
+from GenerativeModelling.VAE import VAE
+from GenerativeModelling.VAE_Encoder import Encoder
+from GenerativeModelling.VAE_Decoder import Decoder
+from GenerativeModelling.verification_net import VerificationNet
+from SemiSupervisedLearning import visualisations
+from GenerativeModelling.Trainer import Trainer
+from GenerativeModelling.stacked_mnist import StackedMNISTData, DataMode
+from GenerativeModelling import utils
 
 import matplotlib.pyplot as plt
 import numpy as np
