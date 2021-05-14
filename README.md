@@ -18,7 +18,7 @@ This project is an implementation of a convolutional neural network from scracth
 This is an implementation of an autoencoder and a semi supervised training routine using PyTorch. We compare a semi supervised learning approach to a purely supervised approach.
 The comparison can be done with four different common datasets; CIFAR10, MNIST, FashionMNIST and KMNIST. 
 
-**To run:** Configure which dataset to run and hyperparameters in `demo.py` and run it. Note that this is a bit computationally heavy, and is not configured to run on GPUs so keep the number of epochs low unless you have a really powerful computer
+**To run:** Configure which dataset to run and hyperparameters in `demo.py` and run it. Note that this is a bit computationally heavy, and is not configured to run on GPUs so keep the number of epochs low unless you have a really powerful computer. You should be able to obtain ~96% accuracy without melting your computer.
 
 ### Generative modelling
 Here is an implementation of a regular autoencoder and a variational autoencoder both as generative models and anomaly detectors using PyTorch trained on MNIST. The models are configured to be able to run on a GPU if you have one available. 
