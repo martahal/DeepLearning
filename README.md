@@ -1,6 +1,7 @@
 # DeepLearning
 This repository contains four projects that correspond to assignments in the course Deep Learning at NTNU. (course code left out on purpose)
 The code is structured to solve these assignments and not necessarily be ready to run out of the box although demonstrations can be done without too much plundering.
+
 Below is a short description of each project. 
 
 ### Fully Connected Neural Network
